@@ -5,7 +5,7 @@ install:
 	uv sync
 
 run:
-	uv run python3 -m src/__main__.py
+	uv run python3 -m src/pac-man
 
 debug:
 	@echo "Running in debug mode..."
