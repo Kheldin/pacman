@@ -5,11 +5,11 @@ install:
 	uv sync
 
 run:
-	uv run python3 -m src/pac-man
+	uv run python3 -m src.pac-man
 
 debug:
 	@echo "Running in debug mode..."
-	uv run python -m pdb -m src
+	uv run python3 -m pdb -m src.pac-man
 
 clean:
 	@echo "Cleaning temporary files..."
