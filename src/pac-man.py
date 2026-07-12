@@ -1,20 +1,22 @@
 import sys
 from pydantic import ValidationError
-from pprint import pprint               # Do not forget to delete when the project is done
 from mazegenerator import MazeGenerator
-from src.models.config import PacmanConfig
+from src.parser import ConfigParser, PacmanConfig
 
-def parse_config(path: str) -> PacmanConfig:
-    with open("config.json", 'r') as f:
-        content = f.read()
-        config = PacmanConfig.model_validate_json(content)
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("You must provide a valid config json file path", file=sys.stderr)
+        sys.exit(1)
+
     maze = MazeGenerator((15, 15))
     maze.generate()
-    if len(sys.argv) != 2:
-        print("Only one arg is required: config file path ending with json.", sys.stderr)
+    parser = ConfigParser("config.json")
+    
     try:
-        parse_config(sys.argv[1])
-    except ValidationError as e:
-        print(e)
+        config = parser.parse(PacmanConfig)
+        print(config)
+    except FileNotFoundError:
+        print(f"Error : File '{parser.filepath}' not found.")
+    except Exception as e:
+        print(f"Error when parsing : {e}")
