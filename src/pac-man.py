@@ -1,8 +1,10 @@
 import sys
+
 from pydantic import ValidationError
+
 from mazegenerator import MazeGenerator
 from src.parser import ConfigParser, PacmanConfig
-
+from src.logger import log_message, LogType
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -14,9 +16,12 @@ if __name__ == "__main__":
     parser = ConfigParser("config.json")
     
     try:
+        log_message("Parsing config file...", LogType.INFO)
         config = parser.parse(PacmanConfig)
-        print(config)
+        log_message("Config file successfuly parsed !", LogType.SUCCESS)
     except FileNotFoundError:
-        print(f"Error : File '{parser.filepath}' not found.")
+        log_message(f"Error : File '{parser.filepath}' not found.", LogType.ERROR)
+    except ValidationError as e:
+        log_message(repr(e.errors()[0]['msg']), LogType.ERROR)
     except Exception as e:
-        print(f"Error when parsing : {e}")
+        log_message(f"Error when parsing : {e}", LogType.ERROR)

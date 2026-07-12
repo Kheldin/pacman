@@ -48,5 +48,4 @@ class ConfigParser:
         if not self._check_json_extension():
             raise ValueError("You must provide a .json file.")
         content = self._clean_content()
-        print(content)
         return model_class.model_validate_json(content)
