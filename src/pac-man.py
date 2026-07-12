@@ -89,7 +89,6 @@ class GameView(arcade.View):
         self.game_over = False
 
     def load_level(self, level):
-        # layer_options = {"Platforms": {"use_spatial_hash": True}}
 
         # Read in the tiled map
         self.tile_map = arcade.load_tilemap(
@@ -101,10 +100,9 @@ class GameView(arcade.View):
         # Calculate the right edge of the my_map in pixels
         self.end_of_map = self.tile_map.width * GRID_PIXEL_SIZE
 
-        self.physics_engine = arcade.PhysicsEnginePlatformer(
+        self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite,
             self.tile_map.sprite_lists["Platforms"],
-            gravity_constant=GRAVITY,
         )
 
         # --- Other stuff
@@ -153,8 +151,9 @@ class GameView(arcade.View):
         Called whenever the mouse moves.
         """
         if key == arcade.key.UP:
-            if self.physics_engine.can_jump():
-                self.player_sprite.change_y = JUMP_SPEED
+            self.player_sprite.change_y = MOVEMENT_SPEED
+        elif key == arcade.key.DOWN:
+            self.player_sprite.change_y = -MOVEMENT_SPEED
         elif key == arcade.key.LEFT:
             self.player_sprite.change_x = -MOVEMENT_SPEED
         elif key == arcade.key.RIGHT:
@@ -166,6 +165,9 @@ class GameView(arcade.View):
         """
         if key == arcade.key.LEFT or key == arcade.key.RIGHT:
             self.player_sprite.change_x = 0
+        
+        elif key == arcade.key.UP or key == arcade.key.DOWN:
+            self.player_sprite.change_y = 0
 
     def on_update(self, delta_time):
         """Movement and game logic"""
