@@ -37,11 +37,10 @@ def main():
     # Generate Maze
     maze = MazeGenerator((15, 15))
     maze.generate()
-    print(maze.maze)
-    # Setup Window and Game
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
+    window.center_window()
     game = GameView()
-    game.setup()
+    game.setup(maze.maze)
 
     window.show_view(game)
     window.run()

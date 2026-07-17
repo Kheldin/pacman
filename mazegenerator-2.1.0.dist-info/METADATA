@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: mazegenerator
-Version: 2.0.2
+Version: 2.1.0
 Summary: A simple maze generator class 'MazeGenerator'.
 Author-email: ol <ol@42.fr>
 License-Expression: MIT
@@ -25,7 +25,7 @@ A Python package for generating random mazes with customizable parameters and pa
 
 In your preferred virtual environment:
 ```bash
-pip install mazegenerator-2.0.2-py3-none-any.whl
+pip install mazegenerator-2.1.0-py3-none-any.whl
 ```
 
 ## Quick Start
@@ -97,6 +97,9 @@ Each cell in the maze grid contains wall information stored in an int using the 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### v2.1.0
+- Fix the pac-man compatibility
 
 ### v2.0.2
 - Replace iterative-deepening DFS shortest-path finder with BFS

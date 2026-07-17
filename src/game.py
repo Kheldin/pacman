@@ -1,44 +1,25 @@
 import arcade
 
-TILE_SPRITE_SCALING = 0.5
-PLAYER_SCALING = 1.5
 
-SPRITE_PIXEL_SIZE = 128
-GRID_PIXEL_SIZE = SPRITE_PIXEL_SIZE * TILE_SPRITE_SCALING
+TILE_SOURCE_SIZE = 16 
+PLAYER_SOURCE_SIZE = 32 
+
+TILE_SPRITE_SCALING = 3.0 
+PLAYER_SCALING = 1.3 
+
+GRID_PIXEL_SIZE = TILE_SOURCE_SIZE * TILE_SPRITE_SCALING
+
+WALL_THICKNESS = 4
+WALL_COLOR = arcade.color.BLUE_SAPPHIRE
+
 CAMERA_PAN_SPEED = 0.15
-
-# Physics
 MOVEMENT_SPEED = 5
 
-# Direction Constants for easy tracking
 DIR_RIGHT = 0
 DIR_LEFT = 1
 DIR_UP = 2
 DIR_DOWN = 3
 
-
-# Taille d'une tuile dans le fichier image original
-TILE_SOURCE_SIZE = 16 
-
-# Dictionnaire de mapping : Valeur du mur -> (x, y) dans le sprite sheet
-TILE_MAPPING = {
-    0:  (0, 0),     # Pas de murs (Vide)
-    1:  (16, 0),    # Mur Nord
-    2:  (32, 0),    # Mur Est
-    3:  (48, 0),    # Murs Nord + Est (Coin bas-gauche)
-    4:  (0, 16),    # Mur Sud
-    5:  (16, 16),   # Murs Nord + Sud (Couloir horizontal)
-    6:  (32, 16),   # Murs Sud + Est (Coin haut-gauche)
-    7:  (48, 16),   # Murs Nord + Sud + Est (Cul-de-sac vers l'Ouest)
-    8:  (0, 32),    # Mur Ouest
-    9:  (16, 32),   # Murs Nord + Ouest (Coin bas-droite)
-    10: (32, 32),   # Murs Est + Ouest (Couloir vertical)
-    11: (48, 32),   # Murs Nord + Est + Ouest (Cul-de-sac vers le Sud)
-    12: (0, 48),    # Murs Sud + Ouest (Coin haut-droite)
-    13: (16, 48),   # Murs Nord + Sud + Ouest (Cul-de-sac vers l'Est)
-    14: (32, 48),   # Murs Sud + Est + Ouest (Cul-de-sac vers le Nord)
-    15: (48, 48)    # 4 Murs (Bloc fermé)
-}
 
 class GameView(arcade.View):
     """Main application class."""
@@ -49,13 +30,9 @@ class GameView(arcade.View):
         """
         super().__init__()
 
-        # Tilemap Object
-        self.tile_map = None
-
-        # Sprite lists
+        self.wall_list = None
         self.player_list = None
 
-        # Set up the player
         self.score = 0
         self.player_sprite = None
 
@@ -68,99 +45,135 @@ class GameView(arcade.View):
 
         self.level = 1
         self.max_level = 2
+        
         self.current_texture_index = 0
         self.time_since_last_frame = 0.0
-        self.animation_speed = 0.05  # Seconds per frame (lower is faster)
-        self.current_direction = DIR_RIGHT # Default starting direction
+        self.animation_speed = 0.05         # Seconds per frame (lower is faster)
+        self.current_direction = DIR_RIGHT
 
-    def setup(self):
-        """Set up the game and initialize all core variables."""
+    def setup(self, maze_data):
+        """Set up the game and initialize all core variables, including the procedural maze."""
 
-        # Initialize the sprite list for the player
         self.player_list = arcade.SpriteList()
+        self.wall_list = arcade.SpriteList()
         
-        # Load the raw sprite sheet
+        
         sprite_sheet = arcade.load_spritesheet("src/assets/PacManAssets-PacMan.png")
 
-        # Extract the grid of textures from the sheet
         all_textures = sprite_sheet.get_texture_grid(
             size=(32, 32),
             columns=4,
             count=11
         )
 
-        # Base textures (Facing Right)
         self.moving_right = all_textures[0:4]
         
-        # Generated textures (Facing Left - mirrored horizontally)
         self.moving_left = [tex.flip_left_right() for tex in self.moving_right]
 
-        # Other animations (Death)
         self.destroying_right = all_textures[4:8]
         self.destroying_right2 = all_textures[8:11]
 
-        # Instantiate the player sprite
         self.player_sprite = arcade.Sprite(scale=PLAYER_SCALING)
         self.player_sprite.texture = self.moving_right[0]
         
-        # Reset animation state for safety on restart
         self.current_texture_index = 0
         self.time_since_last_frame = 0.0
         self.current_direction = DIR_RIGHT
+
+        
+        rows = len(maze_data)
+        cols = len(maze_data[0]) if rows > 0 else 0
+        
+        self.end_of_map = cols * GRID_PIXEL_SIZE
+
+        for row_index, row in enumerate(maze_data):
+            for col_index, cell_value in enumerate(row):
+                
+                if cell_value == 0:
+                    continue
+                
+                # Calculate the exact center of the current cell
+                cx = col_index * GRID_PIXEL_SIZE + (GRID_PIXEL_SIZE / 2)
+                cy = (rows - 1 - row_index) * GRID_PIXEL_SIZE + (GRID_PIXEL_SIZE / 2)
+                
+                # North Wall (Bit 0)
+                if cell_value & 1:
+                    wall = arcade.SpriteSolidColor(
+                        width=int(GRID_PIXEL_SIZE), 
+                        height=WALL_THICKNESS, 
+                        color=WALL_COLOR
+                    )
+                    wall.center_x = cx
+                    wall.center_y = cy + (GRID_PIXEL_SIZE / 2) - (WALL_THICKNESS / 2)
+                    self.wall_list.append(wall)
+                
+                # East Wall (Bit 1)
+                if cell_value & 2:
+                    wall = arcade.SpriteSolidColor(
+                        width=WALL_THICKNESS, 
+                        height=int(GRID_PIXEL_SIZE), 
+                        color=WALL_COLOR
+                    )
+                    wall.center_x = cx + (GRID_PIXEL_SIZE / 2) - (WALL_THICKNESS / 2)
+                    wall.center_y = cy
+                    self.wall_list.append(wall)
+                
+                # South Wall (Bit 2)
+                if cell_value & 4:
+                    wall = arcade.SpriteSolidColor(
+                        width=int(GRID_PIXEL_SIZE), 
+                        height=WALL_THICKNESS, 
+                        color=WALL_COLOR
+                    )
+                    wall.center_x = cx
+                    wall.center_y = cy - (GRID_PIXEL_SIZE / 2) + (WALL_THICKNESS / 2)
+                    self.wall_list.append(wall)
+                
+                # West Wall (Bit 3)
+                if cell_value & 8:
+                    wall = arcade.SpriteSolidColor(
+                        width=WALL_THICKNESS, 
+                        height=int(GRID_PIXEL_SIZE), 
+                        color=WALL_COLOR
+                    )
+                    wall.center_x = cx - (GRID_PIXEL_SIZE / 2) + (WALL_THICKNESS / 2)
+                    wall.center_y = cy
+                    self.wall_list.append(wall)
 
         # Initialize cameras
         self.game_camera = arcade.Camera2D()
         self.gui_camera = arcade.Camera2D()
 
-        # Setup GUI text elements (FPS and Game Over screens)
-        self.fps_text = arcade.Text('FPS:', 10, 10, arcade.color.BLACK, 14)
+        # Setup GUI text elements (White text on black background)
+        self.fps_text = arcade.Text('FPS:', 10, 10, arcade.color.WHITE, 14)
+        
+        # Position is set exactly once here, preventing the crash
         self.game_over_text = arcade.Text(
             'GAME OVER',
-            self.window.center_x,
-            self.window.center_y,
-            arcade.color.BLACK, 30,
+            self.window.width / 2,
+            self.window.height / 2,
+            arcade.color.WHITE, 
+            font_size=50,
             anchor_x='center',
             anchor_y='center'
         )
 
-        # Set the initial spawning coordinates for the player
-        self.player_sprite.center_x = 128
-        self.player_sprite.center_y = 64
-        
-        # Add the configured player to the sprite list
+        # Set the initial spawning coordinates for the player (bottom-left corner safely inside grid)
+        self.player_sprite.center_x = GRID_PIXEL_SIZE * 1.5
+        self.player_sprite.center_y = GRID_PIXEL_SIZE * 1.5
         self.player_list.append(self.player_sprite)
 
-        # Load the initial level (Map, Walls, Physics Engine setup)
-        self.load_level(self.level)
-
-        # Reset game state flags
-        self.game_over = False
-
-    def load_level(self, level):
-        """Load a specific level map and configure boundaries."""
-
-        # Read in the tiled map
-        self.tile_map = arcade.load_tilemap(
-            f":resources:tiled_maps/level_{level}.json", scaling=TILE_SPRITE_SCALING
-        )
-
-        # Calculate the right edge of the map in pixels
-        self.end_of_map = self.tile_map.width * GRID_PIXEL_SIZE
-
-        # Initialize the physics engine for collisions
+        # Initialize the physics engine with the procedural walls
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite,
-            self.tile_map.sprite_lists["Platforms"],
+            self.wall_list,
         )
 
-        # Set the background color
-        if self.tile_map.background_color:
-            self.window.background_color = self.tile_map.background_color
-
-        # Setup Camera boundaries
-        max_x = GRID_PIXEL_SIZE * self.tile_map.width
-        max_y = GRID_PIXEL_SIZE * self.tile_map.height
+        # Setup Camera boundaries to match the dynamic maze size
+        max_x = GRID_PIXEL_SIZE * cols
+        max_y = GRID_PIXEL_SIZE * rows
         limit_y = max_y > self.window.height
+        
         self.camera_bounds = arcade.LRBT(
             self.window.width / 2.0,
             max_x - self.window.width / 2.0,
@@ -168,30 +181,29 @@ class GameView(arcade.View):
             max_y - (self.window.height / 2.0 if limit_y else 0.0)
         )
 
+        self.window.background_color = arcade.color.BLACK
+        self.game_over = False
+
     def on_draw(self):
         """Render the screen."""
         self.clear()
 
-        # Draw game elements (Follows the player)
         with self.game_camera.activate():
-            self.tile_map.sprite_lists["Platforms"].draw()
+            self.wall_list.draw()
             self.player_list.draw()
 
-        # Draw GUI elements (Fixed on screen)
         with self.gui_camera.activate():
             output = f"FPS: {1/self.window.delta_time:.0f}" if self.window.delta_time > 0 else "FPS: 0"
             arcade.Text(
-                output, 10, 20, arcade.color.BLACK, 14
+                output, 10, 20, arcade.color.WHITE, 14
             ).draw()
 
             if self.game_over:
-                self.game_over_text.position = self.window.center
                 self.game_over_text.draw()
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
         
-        # Track both movement and the direction facing for the animation
         if key == arcade.key.UP:
             self.player_sprite.change_y = MOVEMENT_SPEED
             self.current_direction = DIR_DOWN
@@ -205,37 +217,24 @@ class GameView(arcade.View):
             self.player_sprite.change_x = MOVEMENT_SPEED
             self.current_direction = DIR_RIGHT
 
-
     def on_key_release(self, key, modifiers):
         """Called whenever a key is released."""
-        # Will be deleted when we will have the maze
-        # Pacman cannot stay in place except if he's hiting a wall
         if key == arcade.key.LEFT or key == arcade.key.RIGHT:
             self.player_sprite.change_x = 0
         elif key == arcade.key.UP or key == arcade.key.DOWN:
             self.player_sprite.change_y = 0
 
-
     def on_update(self, delta_time):
         """Movement and game logic, including animation loops."""
 
-        # Level transition logic
+        # Trigger Game Over if player reaches the right edge
         if self.player_sprite.right >= self.end_of_map:
-            if self.level < self.max_level:
-                self.level += 1
-                self.load_level(self.level)
-                self.player_sprite.center_x = 128
-                self.player_sprite.center_y = 64
-                self.player_sprite.change_x = 0
-                self.player_sprite.change_y = 0
-            else:
-                self.game_over = True
+            self.game_over = True
 
         if not self.game_over:
             # Update position based on velocity and handle collisions
             self.physics_engine.update()
             
-            # Check if player is moving
             is_moving = self.player_sprite.change_x != 0 or self.player_sprite.change_y != 0
 
             if is_moving:
@@ -251,10 +250,8 @@ class GameView(arcade.View):
                     if self.current_texture_index >= len(self.moving_right):
                         self.current_texture_index = 0
             else:
-                # Set to a static frame when not moving (0 = closed mouth, 1 = slightly open)
                 self.current_texture_index = 0
 
-            # Apply Texture and Rotation based on direction
             if self.current_direction == DIR_RIGHT:
                 self.player_sprite.texture = self.moving_right[self.current_texture_index]
                 self.player_sprite.angle = 0
@@ -264,11 +261,9 @@ class GameView(arcade.View):
                 self.player_sprite.angle = 0
                 
             elif self.current_direction == DIR_UP:
-                # Use right-facing texture, but rotate the sprite 90 degrees UP
                 self.player_sprite.texture = self.moving_right[self.current_texture_index]
                 self.player_sprite.angle = 90
                 
             elif self.current_direction == DIR_DOWN:
-                # Use right-facing texture, but rotate the sprite 90 degrees DOWN
                 self.player_sprite.texture = self.moving_right[self.current_texture_index]
                 self.player_sprite.angle = -90
