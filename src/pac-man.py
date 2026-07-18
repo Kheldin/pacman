@@ -35,7 +35,7 @@ def main():
         log_message(f"Error when parsing : {e}", LogType.ERROR)
     
     # Generate Maze
-    maze = MazeGenerator((15, 15))
+    maze = MazeGenerator((config["width"], config["lenght"]))
     maze.generate()
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
     window.center_window()
