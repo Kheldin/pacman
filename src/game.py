@@ -269,4 +269,12 @@ class GameView(arcade.View):
             elif self.current_direction == DIR_DOWN:
                 self.player_sprite.texture = self.moving_right[self.current_texture_index]
                 self.player_sprite.angle = -90
-        self.game_camera.position = self.player_sprite.position
+        
+        # Smooth scrolling
+        target_position = self.player_sprite.position
+        
+        self.game_camera.position = arcade.math.lerp_2d(
+            self.game_camera.position, 
+            target_position, 
+            CAMERA_PAN_SPEED
+        )
