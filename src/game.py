@@ -3,13 +3,14 @@ import arcade
 
 TILE_SOURCE_SIZE = 16 
 PLAYER_SOURCE_SIZE = 32 
+ITEM_SOURCE_SIZE = 16
 
 TILE_SPRITE_SCALING = 3.0 
 PLAYER_SCALING = 1.3 
 
 GRID_PIXEL_SIZE = TILE_SOURCE_SIZE * TILE_SPRITE_SCALING
 
-WALL_THICKNESS = 4
+WALL_THICKNESS = 2
 WALL_COLOR = arcade.color.BLUE_SAPPHIRE
 
 CAMERA_PAN_SPEED = 0.15
@@ -32,12 +33,12 @@ class GameView(arcade.View):
 
         self.wall_list = None
         self.player_list = None
+        self.pacgum_list = None
 
         self.score = 0
         self.player_sprite = None
 
         self.physics_engine = None
-        self.end_of_map = 0
         self.game_over = False
 
         self.fps_text = None
@@ -56,7 +57,7 @@ class GameView(arcade.View):
 
         self.player_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
-        
+        self.pacgum_list = arcade.SpriteList()
         
         sprite_sheet = arcade.load_spritesheet("src/assets/PacManAssets-PacMan.png")
 
@@ -80,21 +81,31 @@ class GameView(arcade.View):
         self.time_since_last_frame = 0.0
         self.current_direction = DIR_RIGHT
 
+        item_base_texture = arcade.load_texture("src/assets/PacManAssets-Items.png")
         
+        self.pacgum_texture = item_base_texture.crop(
+            x=0, 
+            y=ITEM_SOURCE_SIZE, 
+            width=ITEM_SOURCE_SIZE, 
+            height=ITEM_SOURCE_SIZE
+        )
+
+
         rows = len(maze_data)
         cols = len(maze_data[0]) if rows > 0 else 0
-        
-        self.end_of_map = cols * GRID_PIXEL_SIZE
+    
 
         for row_index, row in enumerate(maze_data):
             for col_index, cell_value in enumerate(row):
                 
-                if cell_value == 0:
-                    continue
-                
                 # Calculate the exact center of the current cell
                 cx = col_index * GRID_PIXEL_SIZE + (GRID_PIXEL_SIZE / 2)
                 cy = (rows - 1 - row_index) * GRID_PIXEL_SIZE + (GRID_PIXEL_SIZE / 2)
+                
+                pacgum = arcade.Sprite(self.pacgum_texture, scale=1.0)
+                pacgum.center_x = cx
+                pacgum.center_y = cy
+                self.pacgum_list.append(pacgum)
                 
                 # North Wall (Bit 0)
                 if cell_value & 1:
@@ -139,15 +150,13 @@ class GameView(arcade.View):
                     wall.center_x = cx - (GRID_PIXEL_SIZE / 2) + (WALL_THICKNESS / 2)
                     wall.center_y = cy
                     self.wall_list.append(wall)
+ 
 
-        # Initialize cameras
         self.game_camera = arcade.Camera2D()
         self.gui_camera = arcade.Camera2D()
 
-        # Setup GUI text elements (White text on black background)
         self.fps_text = arcade.Text('FPS:', 10, 10, arcade.color.WHITE, 14)
         
-        # Position is set exactly once here, preventing the crash
         self.game_over_text = arcade.Text(
             'GAME OVER',
             self.window.width / 2,
@@ -158,7 +167,6 @@ class GameView(arcade.View):
             anchor_y='center'
         )
 
-        # Set the initial spawning coordinates for the player (bottom-left corner safely inside grid)
         self.player_sprite.center_x = GRID_PIXEL_SIZE * 1.5
         self.player_sprite.center_y = GRID_PIXEL_SIZE * 1.5
         self.player_list.append(self.player_sprite)
@@ -169,7 +177,6 @@ class GameView(arcade.View):
             self.wall_list,
         )
 
-        # Setup Camera boundaries to match the dynamic maze size
         max_x = GRID_PIXEL_SIZE * cols
         max_y = GRID_PIXEL_SIZE * rows
         limit_y = max_y > self.window.height
@@ -188,7 +195,9 @@ class GameView(arcade.View):
         """Render the screen."""
         self.clear()
 
+        # Draw game elements (Follows the player)
         with self.game_camera.activate():
+            self.pacgum_list.draw()
             self.wall_list.draw()
             self.player_list.draw()
 
@@ -227,30 +236,23 @@ class GameView(arcade.View):
     def on_update(self, delta_time):
         """Movement and game logic, including animation loops."""
 
-        # Trigger Game Over if player reaches the right edge
-        if self.player_sprite.right >= self.end_of_map:
-            self.game_over = True
-
         if not self.game_over:
             # Update position based on velocity and handle collisions
             self.physics_engine.update()
-            
             is_moving = self.player_sprite.change_x != 0 or self.player_sprite.change_y != 0
 
             if is_moving:
-                # Accumulate time
                 self.time_since_last_frame += delta_time
                 
-                # Move to next frame if enough time has passed
                 if self.time_since_last_frame >= self.animation_speed:
                     self.time_since_last_frame = 0.0
                     self.current_texture_index += 1
                     
-                    # Loop back to 0 if we exceed the number of frames
                     if self.current_texture_index >= len(self.moving_right):
                         self.current_texture_index = 0
             else:
                 self.current_texture_index = 0
+
 
             if self.current_direction == DIR_RIGHT:
                 self.player_sprite.texture = self.moving_right[self.current_texture_index]
@@ -267,3 +269,4 @@ class GameView(arcade.View):
             elif self.current_direction == DIR_DOWN:
                 self.player_sprite.texture = self.moving_right[self.current_texture_index]
                 self.player_sprite.angle = -90
+        self.game_camera.position = self.player_sprite.position
