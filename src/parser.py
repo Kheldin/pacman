@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 
+
 class PacmanConfig(BaseModel):
     highscore_filename: str = Field(default="config.json")
     width: int = Field(gt=0, default=15)
@@ -19,6 +20,7 @@ class PacmanConfig(BaseModel):
             raise ValueError("Highscore must end with .json")
         return path
 
+
 class ConfigParser:
     """Handle the parsing of the config file."""
     
@@ -31,14 +33,20 @@ class ConfigParser:
         return self.filepath.endswith(".json")
 
     def _clean_content(self) -> str:
-        """Strip # and C/cpp style comment."""
+        """Strip # and C/cpp style comments, even inline."""
         cleaned_lines = []
         
         with open(self.filepath, 'r', encoding='utf-8') as f:
             for line in f:
+                if '//' in line:
+                    line = line.split('//')[0] + '\n'
+                if '#' in line:
+                    line = line.split('#')[0] + '\n'
+                
                 stripped = line.lstrip()
-                if stripped.startswith(self.comment_prefixes):
+                if stripped.startswith(self.comment_prefixes) or not stripped:
                     continue
+                    
                 cleaned_lines.append(line)
                 
         return "".join(cleaned_lines)
@@ -47,5 +55,7 @@ class ConfigParser:
         """Check .json extension and call the PacmanConfig Basemodel"""
         if not self._check_json_extension():
             raise ValueError("You must provide a .json file.")
+            
         content = self._clean_content()
-        return dict(model_class.model_validate_json(content))
+        
+        return model_class.model_validate_json(content)

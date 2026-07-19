@@ -36,7 +36,7 @@ def main():
         sys.exit(1)
     
 
-    maze = MazeGenerator((config["width"], config["height"]))
+    maze = MazeGenerator((config.width, config.height))
     maze.generate()
     
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
