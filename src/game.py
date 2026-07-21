@@ -154,11 +154,11 @@ class GameView(arcade.View):
         self.game_camera = arcade.Camera2D()
         self.gui_camera = arcade.Camera2D()
 
-        self.level_text = arcade.Text(f"Level: {self.level}", 10, self.window.height - 30, arcade.color.YELLOW, 18, bold=True)
-        self.time_text = arcade.Text(f"Time: {int(self.time_left)}", 10, self.window.height - 60, arcade.color.YELLOW, 18, bold=True)
-        self.score_text = arcade.Text(f"Score: {self.score}", 20, 20, arcade.color.YELLOW, 18, bold=True)
+        self.level_text = arcade.Text(f"Level: {self.level}", 10, self.window.height - 30, arcade.color.YELLOW, 18)
+        self.time_text = arcade.Text(f"Time: {int(self.time_left)}", 10, self.window.height - 60, arcade.color.YELLOW, 18)
+        self.score_text = arcade.Text(f"Score: {self.score}", 20, 20, arcade.color.YELLOW, 18)
         self.fps_text = arcade.Text('FPS:', self.window.width - 20, self.window.height - 20, arcade.color.WHITE, 14, anchor_x="right")
-        self.lives_text = arcade.Text(f"Lives: {self.lives}", self.window.width - 20, 20, arcade.color.RED, 18, bold=True, anchor_x="right")
+        self.lives_text = arcade.Text(f"Lives: {self.lives}", self.window.width - 20, 20, arcade.color.RED, 18, anchor_x="right")
         
         self.game_over_text = arcade.Text(
             'GAME OVER',
