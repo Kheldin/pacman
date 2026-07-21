@@ -29,6 +29,7 @@ class GameView(arcade.View):
 
         self.wall_list = None
         self.player_list = None
+        self.ghosts_list = None
         self.pacgum_list = None
         self.super_pacgum_list = None
 
@@ -75,11 +76,42 @@ class GameView(arcade.View):
 
         self.player_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
+        self.ghosts_list = arcade.SpriteList()
         self.pacgum_list = arcade.SpriteList()
         self.super_pacgum_list = arcade.SpriteList()
         
         sprite_sheet = arcade.load_spritesheet("src/assets/PacManAssets-PacMan.png")
         all_textures = sprite_sheet.get_texture_grid(size=(32, 32), columns=4, count=11)
+
+        # ghosts part
+        ghosts_ss = arcade.load_spritesheet("src/assets/PacManAssets-Ghosts.png")
+        ghosts_body_textures = ghosts_ss.get_texture_grid(size=(32, 32), columns=4, count=40)
+        ghosts_face_textures = ghosts_ss.get_texture_grid(size=(16, 16), columns=8, count=16)
+
+        # red
+        self.red_ghost_bodys = ghosts_body_textures[0:4]
+        self.red_ghost_sprite = arcade.Sprite(scale=PLAYER_SCALING)
+        self.red_ghost_sprite.texture = self.red_ghost_bodys[0]
+
+        # blue
+        self.blue_ghost_bodys = ghosts_body_textures[4:8]
+        self.blue_ghost_sprite = arcade.Sprite(scale=PLAYER_SCALING)
+        self.blue_ghost_sprite.texture = self.blue_ghost_bodys[0]
+
+        # orange
+        self.orange_ghost_bodys = ghosts_body_textures[8:12]
+        self.orange_ghost_sprite = arcade.Sprite(scale=PLAYER_SCALING)
+        self.orange_ghost_sprite.texture = self.orange_ghost_bodys[0]
+
+        # green
+        self.green_ghost_bodys = ghosts_body_textures[12:16]
+        self.green_ghost_sprite = arcade.Sprite(scale=PLAYER_SCALING)
+        self.green_ghost_sprite.texture = self.green_ghost_bodys[0]
+
+        self.moving_right = all_textures[0:4]
+        self.moving_left = [tex.flip_left_right() for tex in self.moving_right]
+        self.destroying_right = all_textures[4:8]
+        self.destroying_right2 = all_textures[8:11]
 
         self.moving_right = all_textures[0:4]
         self.moving_left = [tex.flip_left_right() for tex in self.moving_right]
@@ -180,6 +212,35 @@ class GameView(arcade.View):
         self.player_sprite.center_y = center_row * GRID_PIXEL_SIZE + (GRID_PIXEL_SIZE / 2)
         self.player_list.append(self.player_sprite)
 
+        # ghosts part
+
+        #red
+        self.red_ghost_sprite.center_x = cols * GRID_PIXEL_SIZE + (GRID_PIXEL_SIZE / 2) - GRID_PIXEL_SIZE
+        self.red_ghost_sprite.center_y = GRID_PIXEL_SIZE / 2
+        self.ghosts_list.append(self.red_ghost_sprite)
+
+        #blue
+        self.blue_ghost_sprite.center_x = GRID_PIXEL_SIZE / 2
+        self.blue_ghost_sprite.center_y = GRID_PIXEL_SIZE / 2
+        self.ghosts_list.append(self.blue_ghost_sprite)
+
+        #orange
+        self.orange_ghost_sprite.center_x = GRID_PIXEL_SIZE / 2
+        self.orange_ghost_sprite.center_y = rows * GRID_PIXEL_SIZE + (GRID_PIXEL_SIZE / 2) - GRID_PIXEL_SIZE
+        self.ghosts_list.append(self.orange_ghost_sprite)
+
+        #green
+        self.green_ghost_sprite.center_x = cols * GRID_PIXEL_SIZE + (GRID_PIXEL_SIZE / 2) - GRID_PIXEL_SIZE
+        self.green_ghost_sprite.center_y = rows * GRID_PIXEL_SIZE + (GRID_PIXEL_SIZE / 2) - GRID_PIXEL_SIZE
+        self.ghosts_list.append(self.green_ghost_sprite)
+
+        self.game_camera.position = self.player_sprite.position
+
+        self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
+        
+        self.window.background_color = arcade.color.BLACK
+        self.game_over = False
+
         self.game_camera.position = self.player_sprite.position
 
         self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
@@ -192,10 +253,11 @@ class GameView(arcade.View):
         self.clear()
 
         with self.game_camera.activate():
-            self.pacgum_list.draw()
-            self.super_pacgum_list.draw()
             self.wall_list.draw()
             self.player_list.draw()
+            self.pacgum_list.draw()
+            self.super_pacgum_list.draw()
+            self.ghosts_list.draw()
 
         with self.gui_camera.activate():
             output = f"FPS: {1/self.window.delta_time:.0f}" if self.window.delta_time > 0 else "FPS: 0"
