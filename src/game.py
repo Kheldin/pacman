@@ -19,7 +19,7 @@ DIR_RIGHT = 0
 DIR_LEFT = 1
 DIR_UP = 2
 DIR_DOWN = 3
-
+        
 
 class GameView(arcade.View):
     """Main game view handling logic, rendering, and physics."""
@@ -118,16 +118,17 @@ class GameView(arcade.View):
                             (row_index == rows - 1 and col_index == 0) or \
                             (row_index == rows - 1 and col_index == cols - 1)
 
-                if is_corner:
-                    super_gum = arcade.Sprite(self.super_pacgum_texture, scale=1.0)
-                    super_gum.center_x = cx
-                    super_gum.center_y = cy
-                    self.super_pacgum_list.append(super_gum)
-                else:
-                    pacgum = arcade.Sprite(self.pacgum_texture, scale=1.0)
-                    pacgum.center_x = cx
-                    pacgum.center_y = cy
-                    self.pacgum_list.append(pacgum)
+                if maze_data[row_index][col_index] != 15:
+                    if is_corner:
+                        super_gum = arcade.Sprite(self.super_pacgum_texture, scale=1.0)
+                        super_gum.center_x = cx
+                        super_gum.center_y = cy
+                        self.super_pacgum_list.append(super_gum)
+                    else:
+                        pacgum = arcade.Sprite(self.pacgum_texture, scale=1.0)
+                        pacgum.center_x = cx
+                        pacgum.center_y = cy
+                        self.pacgum_list.append(pacgum)
                 
                 # Physical walls
                 if cell_value & 1:
