@@ -3,10 +3,10 @@ import arcade
 
 from pydantic import ValidationError
 
-from mazegenerator import MazeGenerator
 from src.parser import ConfigParser, PacmanConfig
 from src.logger import log_message, LogType
 from src.game import GameView
+from src.menu_view import MenuView
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -35,17 +35,12 @@ def main():
         log_message(f"Error when parsing : {e}", LogType.ERROR)
         sys.exit(1)
     
-
-    maze = MazeGenerator((config.width, config.height))
-    maze.generate()
-    
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
     window.center_window()
     
-    game = GameView()
-    game.setup(maze.maze, config)
+    menu = MenuView(config=config)
 
-    window.show_view(game)
+    window.show_view(menu)
     window.run()
 
 if __name__ == "__main__":
