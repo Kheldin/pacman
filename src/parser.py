@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class PacmanConfig(BaseModel):
-    highscore_filename: str = Field(default="config.json")
+    highscore_filename: str = Field(default="highscore.json")
     width: int = Field(gt=0, default=15)
     height: int = Field(gt=0, default=15)
     lives: int = Field(gt=0, default=4)

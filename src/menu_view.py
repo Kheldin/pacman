@@ -1,7 +1,11 @@
 import arcade
 import arcade.gui
 from src.game import GameView
+from src.highscore_view import HighscoreView
+from src.logger import log_message, LogType
 from mazegenerator import MazeGenerator
+
+
 
 # button_style = {
 #     "bg_color": arcade.color.BLUE,
@@ -38,32 +42,41 @@ class MenuView(arcade.View):
         )
 
     def on_click_start(self, event) -> None:
-        """start a game"""
+        """start a game."""
         from src.pacman import WINDOW_WIDTH, WINDOW_HEIGHT
         maze = MazeGenerator((self.config.width, self.config.height))
         maze.generate()
         game = GameView()
         game.setup(maze.maze, self.config)
+        self.uimanager.disable()
         self.window.show_view(game)
-        print("Game started")
+        log_message("Game started", log_type=LogType.INFO)
 
 
     def on_click_highscore(self, event):
-        """Display highscore given in config file"""
-        pass
+        """Display highscore given in config file."""
+        highscore = HighscoreView(self.config.highscore_filename)
+        self.window.show_view(highscore)
+        log_message("Displaying highscore view.", log_type=LogType.INFO)
+
 
     
     def on_click_instructions(self, event):
+        """Show controls and instructions."""
         pass
 
     def on_click_exit(self, event):
+        """Quit the game"""
         arcade.exit()
 
 
     def on_show_view(self) -> None:
+        """Define what happened when we display the view."""
         self.window.background_color = arcade.color.DARK_BLUE
+        self.uimanager.enable()
 
     def on_draw(self) -> None:
+        """Draw the view."""
         self.clear()
         # text = arcade.Text(
         #     "Welcome To Pacman2026", WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2,
