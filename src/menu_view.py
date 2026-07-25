@@ -30,7 +30,9 @@ class MenuView(arcade.View):
         self.v_box = arcade.gui.UIBoxLayout()
         self.v_box.add(self.start_button)
         self.v_box.add(self.highscore_button)
+        self.v_box.add(self.instructions_button)
         self.v_box.add(self.exit_button)
+
         self.uimanager.add(
             arcade.gui.UIAnchorLayout(children=[self.v_box])
         )
