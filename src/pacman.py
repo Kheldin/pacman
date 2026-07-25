@@ -20,7 +20,7 @@ def main():
     parser = ConfigParser(sys.argv[1])
     try:
         log_message("Parsing config file...", LogType.INFO)
-        config = parser.parse(PacmanConfig)
+        config: PacmanConfig = parser.parse(PacmanConfig)
         log_message("Config file successfully parsed !", LogType.SUCCESS)
     except FileNotFoundError:
         log_message(f"Error : File '{parser.filepath}' not found.", LogType.ERROR)
@@ -35,13 +35,16 @@ def main():
         log_message(f"Error when parsing : {e}", LogType.ERROR)
         sys.exit(1)
     
-    window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
-    window.center_window()
-    
-    menu = MenuView(config=config)
+    try:
+        window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
+        window.center_window()
+        
+        menu = MenuView(config=config)
 
-    window.show_view(menu)
-    window.run()
+        window.show_view(menu)
+        window.run()
+    except Exception as e:
+        log_message(e, log_type=LogType.ERROR)
 
 if __name__ == "__main__":
     main()
