@@ -59,7 +59,10 @@ class MenuView(arcade.View):
 
     def on_click_instructions(self, event):
         """Show controls and instructions."""
-        pass
+        from src.instruction_view import InstructionView
+        instruction_view = InstructionView(self.config)
+        self.window.show_view(instruction_view)
+        log_message("Displaying instructions view.", log_type=LogType.INFO)
 
     def on_click_exit(self, event):
         """Quit the game"""
