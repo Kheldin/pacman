@@ -53,7 +53,7 @@ class MenuView(arcade.View):
 
     def on_click_highscore(self, event):
         """Display highscore given in config file."""
-        highscore = HighscoreView(self.config.highscore_filename)
+        highscore = HighscoreView(self.config)
         self.window.show_view(highscore)
         log_message("Displaying highscore view.", log_type=LogType.INFO)
 

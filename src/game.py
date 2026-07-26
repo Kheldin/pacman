@@ -193,7 +193,7 @@ class GameView(arcade.View):
         super_pacgum_texture = item_base_texture.crop(
             ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE)
 
-        # Génération map
+
         self.wall_list, self.pacgum_list, self.super_pacgum_list = create_maze_sprites(
             maze_data, pacgum_texture, super_pacgum_texture
         )
