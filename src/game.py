@@ -187,8 +187,11 @@ class GridSprite(arcade.Sprite):
 
 
 class Ghost(GridSprite):
-    def __init__(self, color_index, all_body_textures, all_faces_textures, scale=1.3):
+    def __init__(self, start_position, color_index, all_body_textures, all_faces_textures, scale=1.3):
         super().__init__(scale=scale)
+
+        self.start_position = start_position
+
         start = color_index * 4
         self.textures = all_body_textures[start: start + 4]
         self.texture = self.textures[0]
@@ -359,6 +362,7 @@ class GameView(arcade.View):
         self.ghost_physics_engines = []
         for i, pos in enumerate(ghost_positions):
             ghost = Ghost(
+                start_position = ghost_positions[i],
                 color_index=i,
                 all_body_textures=ghosts_body_textures,
                 all_faces_textures=ghosts_face_textures,
@@ -520,6 +524,12 @@ class GameView(arcade.View):
                 )
                 self.player_sprite.current_direction = None
                 self.player_sprite.next_direction = None
+
+                for i, ghost in enumerate(self.ghosts_list):
+                    ghost.center_x, ghost.center_y = ghost.start_position
+                    ghost.current_direction = None
+                    ghost.next_direction = None
+                    ghost.sync_faces()
 
         gums_hit = arcade.check_for_collision_with_list(
             self.player_sprite, self.pacgum_list
