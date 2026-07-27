@@ -12,18 +12,21 @@ WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 WINDOW_TITLE = "Not Pacman"
 
+
 def main():
     if len(sys.argv) != 2:
-        log_message("You must provide a valid config json file path", LogType.ERROR)
+        log_message(
+            "You must provide a valid config json file path", LogType.ERROR)
         sys.exit(1)
-        
+
     parser = ConfigParser(sys.argv[1])
     try:
         log_message("Parsing config file...", LogType.INFO)
         config: PacmanConfig = parser.parse(PacmanConfig)
         log_message("Config file successfully parsed !", LogType.SUCCESS)
     except FileNotFoundError:
-        log_message(f"Error : File '{parser.filepath}' not found.", LogType.ERROR)
+        log_message(
+            f"Error : File '{parser.filepath}' not found.", LogType.ERROR)
         sys.exit(1)
     except ValidationError as e:
         if e.errors():
@@ -34,17 +37,17 @@ def main():
     except Exception as e:
         log_message(f"Error when parsing : {e}", LogType.ERROR)
         sys.exit(1)
-    
+
     try:
-        window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
-        window.center_window()
-        
+        window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, fullscreen=True)
+
         menu = MenuView(config=config)
 
         window.show_view(menu)
         window.run()
     except Exception as e:
         log_message(e, log_type=LogType.ERROR)
+
 
 if __name__ == "__main__":
     main()
