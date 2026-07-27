@@ -257,7 +257,6 @@ class GameView(arcade.View):
         self.player_list = None
 
         self.fps_text = None
-        self.game_over_text = None
         self.score_text = None
         self.lives_text = None
         self.ghosts_list = None
@@ -279,7 +278,6 @@ class GameView(arcade.View):
         self.game_over = False
 
         self.fps_text = None
-        self.game_over_text = None
         self.score_text = None
         self.lives_text = None
         self.time_text = None
@@ -290,6 +288,7 @@ class GameView(arcade.View):
 
     def setup(self, maze_data, config):
         self.maze_data = maze_data
+        self.config = config
 
         def get_conf(key, default):
             if hasattr(config, key):
@@ -434,9 +433,23 @@ class GameView(arcade.View):
             self.level_text.draw()
 
             if self.game_over:
-                self.game_over_text.draw()
+                arcade.draw_text(
+                    "GAME OVER", 
+                    self.window.width / 2, 
+                    self.window.height / 2,
+                    arcade.color.YELLOW, 
+                    font_size=70, 
+                    anchor_x="center",
+                    font_name="Pacmania"
+                )
 
     def on_key_press(self, key, modifiers):
+        if self.game_over:
+            from src.menu_view import MenuView
+            menu = MenuView(self.config)
+            self.window.show_view(menu)
+            return
+
         if key == arcade.key.UP:
             self.player_sprite.next_direction = DIR_UP
         elif key == arcade.key.DOWN:
@@ -445,6 +458,8 @@ class GameView(arcade.View):
             self.player_sprite.next_direction = DIR_LEFT
         elif key == arcade.key.RIGHT:
             self.player_sprite.next_direction = DIR_RIGHT
+        elif key == arcade.key.ESCAPE:
+            exit()
 
     def on_update(self, delta_time):
         if self.game_over:
@@ -530,7 +545,6 @@ class GameView(arcade.View):
                     ghost.current_direction = None
                     ghost.next_direction = None
                     ghost.sync_faces()
-
         gums_hit = arcade.check_for_collision_with_list(
             self.player_sprite, self.pacgum_list
         )
