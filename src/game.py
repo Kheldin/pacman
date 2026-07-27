@@ -193,9 +193,12 @@ class Ghost(GridSprite):
         self.start_position = start_position
 
         start = color_index * 4
-        self.textures = all_body_textures[start: start + 4]
-        self.texture = self.textures[0]
+        self.base_textures = all_body_textures[start: start + 4]
+        self.base_texture = self.base_textures[0]
+        self.enible_textures = all_body_textures[35: 36]
+        self.enible_texture = self.enible_textures[0]
 
+        self.texture = self.base_texture
         self.face_sprite = arcade.Sprite(scale=scale)
         self.face_textures = all_faces_textures
         self.face_sprite.texture = self.face_textures[color_index]
@@ -203,6 +206,9 @@ class Ghost(GridSprite):
     def sync_faces(self) -> None:
         self.face_sprite.center_x = self.center_x
         self.face_sprite.center_y = self.center_y + 7
+
+    def sync_enible_textures(self) -> None:
+        pass
 
 
 class Pacman(GridSprite):
@@ -263,6 +269,9 @@ class GameView(arcade.View):
         self.faces_list = None
         self.pacgum_list = None
         self.super_pacgum_list = None
+
+        self.ghosts_enible: bool = False
+        self.time_save = None
 
         self.score = 0
         self.lives = 3
@@ -361,7 +370,7 @@ class GameView(arcade.View):
         self.ghost_physics_engines = []
         for i, pos in enumerate(ghost_positions):
             ghost = Ghost(
-                start_position = ghost_positions[i],
+                start_position=ghost_positions[i],
                 color_index=i,
                 all_body_textures=ghosts_body_textures,
                 all_faces_textures=ghosts_face_textures,
@@ -462,6 +471,8 @@ class GameView(arcade.View):
             exit()
 
     def on_update(self, delta_time):
+        if self.ghosts_enible and self.time_save - self.time_left >= 10:
+            self.ghosts_enible = False
         if self.game_over:
             return
 
@@ -516,6 +527,10 @@ class GameView(arcade.View):
 
             ghost.change_x = 0
             ghost.change_y = 0
+            if self.ghosts_enible:
+                ghost.texture = ghost.enible_texture
+            else:
+                ghost.texture = ghost.base_texture
             if ghost.current_direction == DIR_UP:
                 ghost.change_y = GHOST_SPEED
             elif ghost.current_direction == DIR_DOWN:
@@ -555,6 +570,9 @@ class GameView(arcade.View):
         super_gums_hit = arcade.check_for_collision_with_list(
             self.player_sprite, self.super_pacgum_list
         )
+        if super_gums_hit:
+            self.ghosts_enible = True
+            self.time_save = self.time_left
         for sgum in super_gums_hit:
             sgum.remove_from_sprite_lists()
             self.score += self.score_per_super_gum
