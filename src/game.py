@@ -193,7 +193,6 @@ class GameView(arcade.View):
         super_pacgum_texture = item_base_texture.crop(
             ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE)
 
-
         self.wall_list, self.pacgum_list, self.super_pacgum_list = create_maze_sprites(
             maze_data, pacgum_texture, super_pacgum_texture
         )
@@ -236,21 +235,23 @@ class GameView(arcade.View):
         self.gui_camera = arcade.Camera2D()
         self.game_camera.position = self.player_sprite.position
 
-        self.level_text = arcade.Text(
-            f"Level: {self.level}", 10, self.window.height - 30, arcade.color.YELLOW, 18)
-        self.time_text = arcade.Text(
-            f"Time: {int(self.time_left)}", 10, self.window.height - 60, arcade.color.YELLOW, 18)
-        self.score_text = arcade.Text(
-            f"Score: {self.score}", 20, 20, arcade.color.YELLOW, 18)
-        self.fps_text = arcade.Text('FPS:', self.window.width - 20,
-                                    self.window.height - 20, arcade.color.WHITE, 14, anchor_x="right")
-        self.lives_text = arcade.Text(
-            f"Lives: {self.lives}", self.window.width - 20, 20, arcade.color.RED, 18, anchor_x="right")
-        self.game_over_text = arcade.Text('GAME OVER', self.window.width / 2, self.window.height / 2,
-                                          arcade.color.WHITE, font_size=50, anchor_x='center', anchor_y='center')
+        retro_font = "Pacmania"
+        arcade.load_font("src/assets/Pacmania.ttf")
 
-        self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player_sprite, self.wall_list)
+        self.up1_text = arcade.Text("1UP", 40, self.window.height - 25, arcade.color.WHITE, 16, font_name=retro_font)
+        self.score_text = arcade.Text(str(self.score), 40, self.window.height - 45, arcade.color.WHITE, 16, font_name=retro_font)
+
+        self.high_score_header = arcade.Text("HIGH SCORE", self.window.width / 2, self.window.height - 25, arcade.color.WHITE, 16, anchor_x="center", font_name=retro_font)
+        self.high_score_text = arcade.Text("10000", self.window.width / 2, self.window.height - 45, arcade.color.WHITE, 16, anchor_x="center", font_name=retro_font)
+
+        self.lives_text = arcade.Text(f"VIES: {self.lives}", 20, 15, arcade.color.YELLOW, 16, font_name=retro_font)
+        self.level_text = arcade.Text(f"NIV: {self.level}", self.window.width - 20, 15, arcade.color.YELLOW, 16, anchor_x="right", font_name=retro_font)
+        
+        # Ajout des textes manquants pour éviter le crash
+        self.time_text = arcade.Text(f"TIME: {int(self.time_left)}", self.window.width - 150, self.window.height - 45, arcade.color.WHITE, 16, font_name=retro_font)
+        self.fps_text = arcade.Text("FPS: 0", self.window.width - 20, 50, arcade.color.GRAY, 12, anchor_x="right")
+
+        self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
         self.window.background_color = arcade.color.BLACK
         self.game_over = False
 
@@ -265,9 +266,14 @@ class GameView(arcade.View):
             self.player_list.draw()
 
         with self.gui_camera.activate():
+            # Tout le texte doit être ici sous la caméra GUI
+            self.up1_text.draw()
+            self.score_text.draw()
+            self.high_score_header.draw()
+            self.high_score_text.draw()
+            
             self.fps_text.text = f"FPS: {1/self.window.delta_time:.0f}" if self.window.delta_time > 0 else "FPS: 0"
             self.fps_text.draw()
-            self.score_text.draw()
             self.time_text.draw()
             self.lives_text.draw()
             self.level_text.draw()
