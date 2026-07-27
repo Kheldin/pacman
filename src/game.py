@@ -69,7 +69,8 @@ def bfs_shortest_path_direction(
             next_row = current_row + 1
             if (next_col, next_row) not in visited_cells:
                 visited_cells.add((next_col, next_row))
-                search_queue.append((next_col, next_row, path_taken + [DIR_UP]))
+                search_queue.append(
+                    (next_col, next_row, path_taken + [DIR_UP]))
 
         # Check RIGHT
         if not (cell_wall_data & 2):
@@ -77,7 +78,8 @@ def bfs_shortest_path_direction(
             next_row = current_row
             if (next_col, next_row) not in visited_cells:
                 visited_cells.add((next_col, next_row))
-                search_queue.append((next_col, next_row, path_taken + [DIR_RIGHT]))
+                search_queue.append(
+                    (next_col, next_row, path_taken + [DIR_RIGHT]))
 
         # Check DOWN
         if not (cell_wall_data & 4):
@@ -85,7 +87,8 @@ def bfs_shortest_path_direction(
             next_row = current_row - 1
             if (next_col, next_row) not in visited_cells:
                 visited_cells.add((next_col, next_row))
-                search_queue.append((next_col, next_row, path_taken + [DIR_DOWN]))
+                search_queue.append(
+                    (next_col, next_row, path_taken + [DIR_DOWN]))
 
         # Check LEFT
         if not (cell_wall_data & 8):
@@ -93,7 +96,8 @@ def bfs_shortest_path_direction(
             next_row = current_row
             if (next_col, next_row) not in visited_cells:
                 visited_cells.add((next_col, next_row))
-                search_queue.append((next_col, next_row, path_taken + [DIR_LEFT]))
+                search_queue.append(
+                    (next_col, next_row, path_taken + [DIR_LEFT]))
 
     return None
 
@@ -119,15 +123,17 @@ class GridSprite(arcade.Sprite):
             DIR_LEFT: DIR_RIGHT,
             DIR_RIGHT: DIR_LEFT,
         }
-        
+
         if self.current_direction is not None and self.next_direction == opposite_directions.get(self.current_direction):
             self.current_direction = self.next_direction
             self.next_direction = None
             return
 
         # Calculate which grid cell the sprite is currently inside based on its pixel center
-        current_col = int(round((self.center_x - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE))
-        grid_row_bottom_up = int(round((self.center_y - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE))
+        current_col = int(
+            round((self.center_x - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE))
+        grid_row_bottom_up = int(
+            round((self.center_y - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE))
 
         # Convert the bottom-up row index (used by Arcade coordinates) to top-down row index (used by maze array)
         total_rows = len(maze_data)
@@ -135,10 +141,11 @@ class GridSprite(arcade.Sprite):
         maze_array_row = (total_rows - 1) - grid_row_bottom_up
 
         cell_wall_data = maze_data[maze_array_row][current_col]
-        
+
         # Calculate the exact pixel coordinates of the center of this grid cell
         cell_center_x = current_col * GRID_PIXEL_SIZE + (GRID_PIXEL_SIZE / 2)
-        cell_center_y = grid_row_bottom_up * GRID_PIXEL_SIZE + (GRID_PIXEL_SIZE / 2)
+        cell_center_y = grid_row_bottom_up * \
+            GRID_PIXEL_SIZE + (GRID_PIXEL_SIZE / 2)
 
         is_path_blocked = False
         if self.next_direction == DIR_UP and (cell_wall_data & 1):
@@ -152,26 +159,26 @@ class GridSprite(arcade.Sprite):
 
         if not is_path_blocked:
             can_execute_turn = False
-            
+
             if self.current_direction is None:
                 can_execute_turn = True
-                
+
             elif self.current_direction == DIR_RIGHT and self.center_x >= cell_center_x:
                 can_execute_turn = True
-                
+
             elif self.current_direction == DIR_LEFT and self.center_x <= cell_center_x:
                 can_execute_turn = True
-                
+
             elif self.current_direction == DIR_UP and self.center_y >= cell_center_y:
                 can_execute_turn = True
-                
+
             elif self.current_direction == DIR_DOWN and self.center_y <= cell_center_y:
                 can_execute_turn = True
-                
+
             if can_execute_turn:
                 # Snapping
                 if self.next_direction in [DIR_UP, DIR_DOWN]:
-                    self.center_x = cell_center_x  
+                    self.center_x = cell_center_x
                 elif self.next_direction in [DIR_LEFT, DIR_RIGHT]:
                     self.center_y = cell_center_y
 
@@ -180,19 +187,29 @@ class GridSprite(arcade.Sprite):
 
 
 class Ghost(GridSprite):
-    def __init__(self, color_index, all_body_textures, scale=1.3):
+    def __init__(self, color_index, all_body_textures, all_faces_textures, scale=1.3):
         super().__init__(scale=scale)
         start = color_index * 4
-        self.textures = all_body_textures[start : start + 4]
+        self.textures = all_body_textures[start: start + 4]
         self.texture = self.textures[0]
+
+        self.face_sprite = arcade.Sprite(scale=scale)
+        self.face_textures = all_faces_textures
+        self.face_sprite.texture = self.face_textures[color_index]
+
+    def sync_faces(self) -> None:
+        self.face_sprite.center_x = self.center_x
+        self.face_sprite.center_y = self.center_y + 7
 
 
 class Pacman(GridSprite):
     def __init__(self, scale=1.3):
         super().__init__(scale=scale)
 
-        sprite_sheet = arcade.load_spritesheet("src/assets/PacManAssets-PacMan.png")
-        all_textures = sprite_sheet.get_texture_grid(size=(32, 32), columns=4, count=11)
+        sprite_sheet = arcade.load_spritesheet(
+            "src/assets/PacManAssets-PacMan.png")
+        all_textures = sprite_sheet.get_texture_grid(
+            size=(32, 32), columns=4, count=11)
 
         self.moving_right = all_textures[0:4]
         self.moving_left = [tex.flip_left_right() for tex in self.moving_right]
@@ -241,6 +258,7 @@ class GameView(arcade.View):
         self.score_text = None
         self.lives_text = None
         self.ghosts_list = None
+        self.faces_list = None
         self.pacgum_list = None
         self.super_pacgum_list = None
 
@@ -285,14 +303,15 @@ class GameView(arcade.View):
 
         self.player_list = arcade.SpriteList()
         self.ghosts_list = arcade.SpriteList()
+        self.faces_list = arcade.SpriteList()
 
-        item_base_texture = arcade.load_texture("src/assets/PacManAssets-Items.png")
+        item_base_texture = arcade.load_texture(
+            "src/assets/PacManAssets-Items.png")
         pacgum_texture = item_base_texture.crop(
             0, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE
         )
         super_pacgum_texture = item_base_texture.crop(
             ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE)
-
 
         self.wall_list, self.pacgum_list, self.super_pacgum_list = create_maze_sprites(
             maze_data, pacgum_texture, super_pacgum_texture
@@ -316,9 +335,15 @@ class GameView(arcade.View):
             self.player_sprite.center_y,
         )
 
-        ghosts_ss = arcade.load_spritesheet("src/assets/PacManAssets-Ghosts.png")
-        ghosts_body_textures = ghosts_ss.get_texture_grid(
+        ghosts_bss = arcade.load_spritesheet(
+            "src/assets/PacManAssets-Ghosts_Bodys.png")
+        ghosts_body_textures = ghosts_bss.get_texture_grid(
             size=(32, 32), columns=4, count=40
+        )
+        ghosts_fss = arcade.load_spritesheet(
+            "src/assets/PacManAssets-Ghosts_Faces.png")
+        ghosts_face_textures = ghosts_fss.get_texture_grid(
+            size=(16, 16), columns=8, count=16
         )
 
         ghost_positions = [
@@ -336,10 +361,13 @@ class GameView(arcade.View):
             ghost = Ghost(
                 color_index=i,
                 all_body_textures=ghosts_body_textures,
+                all_faces_textures=ghosts_face_textures,
                 scale=PLAYER_SCALING,
             )
             ghost.center_x, ghost.center_y = pos
+            ghost.sync_faces()
             self.ghosts_list.append(ghost)
+            self.faces_list.append(ghost.face_sprite)
             self.ghost_physics_engines.append(
                 arcade.PhysicsEngineSimple(ghost, self.wall_list)
             )
@@ -351,20 +379,29 @@ class GameView(arcade.View):
         retro_font = "Pacmania"
         arcade.load_font("src/assets/Pacmania.ttf")
 
-        self.up1_text = arcade.Text("1UP", 40, self.window.height - 25, arcade.color.WHITE, 16, font_name=retro_font)
-        self.score_text = arcade.Text(str(self.score), 40, self.window.height - 45, arcade.color.WHITE, 16, font_name=retro_font)
+        self.up1_text = arcade.Text(
+            "1UP", 40, self.window.height - 25, arcade.color.WHITE, 16, font_name=retro_font)
+        self.score_text = arcade.Text(str(
+            self.score), 40, self.window.height - 45, arcade.color.WHITE, 16, font_name=retro_font)
 
-        self.high_score_header = arcade.Text("HIGH SCORE", self.window.width / 2, self.window.height - 25, arcade.color.WHITE, 16, anchor_x="center", font_name=retro_font)
-        self.high_score_text = arcade.Text("10000", self.window.width / 2, self.window.height - 45, arcade.color.WHITE, 16, anchor_x="center", font_name=retro_font)
+        self.high_score_header = arcade.Text("HIGH SCORE", self.window.width / 2, self.window.height -
+                                             25, arcade.color.WHITE, 16, anchor_x="center", font_name=retro_font)
+        self.high_score_text = arcade.Text("10000", self.window.width / 2, self.window.height -
+                                           45, arcade.color.WHITE, 16, anchor_x="center", font_name=retro_font)
 
-        self.lives_text = arcade.Text(f"VIES: {self.lives}", 20, 15, arcade.color.YELLOW, 16, font_name=retro_font)
-        self.level_text = arcade.Text(f"NIV: {self.level}", self.window.width - 20, 15, arcade.color.YELLOW, 16, anchor_x="right", font_name=retro_font)
-        
+        self.lives_text = arcade.Text(
+            f"VIES: {self.lives}", 20, 15, arcade.color.YELLOW, 16, font_name=retro_font)
+        self.level_text = arcade.Text(f"NIV: {self.level}", self.window.width -
+                                      20, 15, arcade.color.YELLOW, 16, anchor_x="right", font_name=retro_font)
+
         # Ajout des textes manquants pour éviter le crash
-        self.time_text = arcade.Text(f"TIME: {int(self.time_left)}", self.window.width - 150, self.window.height - 45, arcade.color.WHITE, 16, font_name=retro_font)
-        self.fps_text = arcade.Text("FPS: 0", self.window.width - 20, 50, arcade.color.GRAY, 12, anchor_x="right")
+        self.time_text = arcade.Text(f"TIME: {int(self.time_left)}", self.window.width -
+                                     150, self.window.height - 45, arcade.color.WHITE, 16, font_name=retro_font)
+        self.fps_text = arcade.Text(
+            "FPS: 0", self.window.width - 20, 50, arcade.color.GRAY, 12, anchor_x="right")
 
-        self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
+        self.physics_engine = arcade.PhysicsEngineSimple(
+            self.player_sprite, self.wall_list)
         self.window.background_color = arcade.color.BLACK
         self.game_over = False
 
@@ -376,6 +413,7 @@ class GameView(arcade.View):
             self.pacgum_list.draw()
             self.super_pacgum_list.draw()
             self.ghosts_list.draw()
+            self.faces_list.draw()
             self.player_list.draw()
 
         with self.gui_camera.activate():
@@ -384,7 +422,7 @@ class GameView(arcade.View):
             self.score_text.draw()
             self.high_score_header.draw()
             self.high_score_text.draw()
-            
+
             self.fps_text.text = f"FPS: {1/self.window.delta_time:.0f}" if self.window.delta_time > 0 else "FPS: 0"
             self.fps_text.draw()
             self.time_text.draw()
@@ -430,12 +468,14 @@ class GameView(arcade.View):
 
         target_col = int(
             round(
-                (self.player_sprite.center_x - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE
+                (self.player_sprite.center_x -
+                 (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE
             )
         )
         target_row = int(
             round(
-                (self.player_sprite.center_y - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE
+                (self.player_sprite.center_y -
+                 (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE
             )
         )
 
@@ -467,6 +507,7 @@ class GameView(arcade.View):
                 ghost.change_x = GHOST_SPEED
 
             self.ghost_physics_engines[i].update()
+            ghost.sync_faces()
 
         if arcade.check_for_collision_with_list(self.player_sprite, self.ghosts_list):
             self.lives -= 1
