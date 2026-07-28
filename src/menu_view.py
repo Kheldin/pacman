@@ -7,6 +7,7 @@ from mazegenerator import MazeGenerator
 
 
 class MenuView(arcade.View):
+    """Display the menu."""
     def __init__(self, config):
         super().__init__()
         self.config = config
@@ -83,6 +84,7 @@ class MenuView(arcade.View):
         self.uimanager.add(arcade.gui.UIAnchorLayout(children=[self.v_box]))
 
     def spawn_gums(self):
+        """Spawn pacgum."""
         self.pacgum_list.clear()
         for x in range(100, 2500, 150):
             gum = arcade.Sprite(self.pacgum_texture, scale=3.0)
@@ -97,7 +99,6 @@ class MenuView(arcade.View):
         maze = MazeGenerator((self.config.width, self.config.height))
         maze.generate()
         game = GameView()
-        print(maze.maze)
         game.setup(maze.maze, self.config)
         self.window.show_view(game)
         log_message("Game started", log_type=LogType.INFO)
@@ -128,23 +129,20 @@ class MenuView(arcade.View):
         self.uimanager.disable()
 
     def on_update(self, delta_time: float):
-        """Logique d'animation et de déplacement."""
-        # Animation de la bouche
+        """Animation logic."""
         self.time_since_last_frame += delta_time
         if self.time_since_last_frame >= 0.08:
             self.time_since_last_frame = 0.0
             self.pacman_frame = (self.pacman_frame + 1) % len(self.pacman_textures)
             self.giant_pacman.texture = self.pacman_textures[self.pacman_frame]
 
-        # Déplacement horizontal
         self.giant_pacman.center_x += 250 * delta_time
 
-        # Disparition des Pac-Gums
         gums_hit = arcade.check_for_collision_with_list(self.giant_pacman, self.pacgum_list)
         for gum in gums_hit:
             gum.remove_from_sprite_lists()
 
-        # Réinitialisation quand Pac-Man sort de l'écran
+        # Reset when pacman reach the border of the screen
         if self.giant_pacman.left > self.window.width:
             self.giant_pacman.right = -100
             self.spawn_gums()
@@ -153,7 +151,6 @@ class MenuView(arcade.View):
         """Draw the view."""
         self.clear()
         
-        # Dessin des sprites décoratifs
         self.pacgum_list.draw()
         self.pacman_list.draw()
         

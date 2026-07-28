@@ -85,7 +85,6 @@ class HighscoreView(arcade.View):
         return True
 
     def on_show_view(self) -> None:
-        from src.pacman import WINDOW_HEIGHT, WINDOW_WIDTH
         
         self.uimanager.enable()
         self.window.background_color = arcade.color.DARK_BLUE
@@ -95,8 +94,8 @@ class HighscoreView(arcade.View):
 
         title_text = arcade.Text(
             "HIGHSCORES", 
-            WINDOW_WIDTH / 2, 
-            WINDOW_HEIGHT - 70,
+            self.window.width / 2, 
+            self.window.height - 70,
             arcade.color.YELLOW, 
             font_size=28, 
             anchor_x="center",
@@ -106,13 +105,13 @@ class HighscoreView(arcade.View):
 
         sorted_scores = sorted(self.highscores.items(), key=lambda item: item[1], reverse=True)
 
-        start_y = WINDOW_HEIGHT - 140
+        start_y = self.window.height - 140
         line_height = 35
 
         if not sorted_scores:
             empty_text = arcade.Text(
                 "No highscores yet!",
-                WINDOW_WIDTH / 2,
+                self.window.height / 2,
                 start_y,
                 arcade.color.WHITE,
                 font_size=16,
@@ -125,7 +124,7 @@ class HighscoreView(arcade.View):
                 
                 entry_text = arcade.Text(
                     f"{i + 1}.  {name.upper()}  -  {score}",
-                    WINDOW_WIDTH / 2,
+                    self.window.width / 2,
                     y_pos,
                     arcade.color.WHITE,
                     font_size=18,

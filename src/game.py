@@ -3,7 +3,7 @@ import random
 import math
 from collections import deque
 from src.maze_sprites import create_maze_sprites
-from src.enible_ia import best_dir_for_run_away
+from src.edible_ia import best_dir_to_run_away
 
 TILE_SOURCE_SIZE = 16
 PLAYER_SOURCE_SIZE = 32
@@ -198,8 +198,8 @@ class Ghost(GridSprite):
         self.respawn_time = None
         self.base_textures = all_body_textures[start: start + 4]
         self.base_texture = self.base_textures[0]
-        self.enible_textures = all_body_textures[35: 36]
-        self.enible_texture = self.enible_textures[0]
+        self.edible_textures = all_body_textures[35: 36]
+        self.edible_texture = self.edible_textures[0]
 
         self.texture = self.base_texture
         self.face_sprite = arcade.Sprite(scale=scale)
@@ -210,7 +210,7 @@ class Ghost(GridSprite):
         self.face_sprite.center_x = self.center_x
         self.face_sprite.center_y = self.center_y + 7
 
-    def sync_enible_textures(self) -> None:
+    def sync_edible_textures(self) -> None:
         pass
 
 
@@ -274,8 +274,8 @@ class GameView(arcade.View):
         self.pacgum_list = None
         self.super_pacgum_list = None
 
-        self.ghosts_enible: bool = False
-        self.start_enible_mode = None
+        self.ghosts_edible: bool = False
+        self.start_edible_mode = None
 
         self.score = 0
         self.lives = 3
@@ -477,8 +477,8 @@ class GameView(arcade.View):
             exit()
 
     def on_update(self, delta_time):
-        if self.ghosts_enible and self.start_enible_mode - self.time_left >= 10:
-            self.ghosts_enible = False
+        if self.ghosts_edible and self.start_edible_mode - self.time_left >= 10:
+            self.ghosts_edible = False
         if self.game_over:
             return
 
@@ -530,8 +530,8 @@ class GameView(arcade.View):
                 round((ghost.center_y - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE)
             )
 
-            if self.ghosts_enible:
-                best_dir = best_dir_for_run_away(
+            if self.ghosts_edible:
+                best_dir = best_dir_to_run_away(
                     target_col, target_row, ghost_col, ghost_row, self.maze_data)
             else:
                 best_dir = bfs_shortest_path_direction(
@@ -546,8 +546,8 @@ class GameView(arcade.View):
 
             ghost.change_x = 0
             ghost.change_y = 0
-            if self.ghosts_enible:
-                ghost.texture = ghost.enible_texture
+            if self.ghosts_edible:
+                ghost.texture = ghost.edible_texture
             else:
                 ghost.texture = ghost.base_texture
             if ghost.current_direction == DIR_UP:
@@ -564,9 +564,7 @@ class GameView(arcade.View):
         ghosts_hit = arcade.check_for_collision_with_list(
             self.player_sprite, self.ghosts_list)
         if ghosts_hit:
-            print("LENNN ==", len(ghosts_hit))
-        if ghosts_hit:
-            if self.ghosts_enible:
+            if self.ghosts_edible:
                 for ghost in ghosts_hit:
                     ghost.respawn_time = self.time_left - 10
                     ghost.center_x = -1000
@@ -600,8 +598,8 @@ class GameView(arcade.View):
             self.player_sprite, self.super_pacgum_list
         )
         if super_gums_hit:
-            self.ghosts_enible = True
-            self.start_enible_mode = self.time_left
+            self.ghosts_edible = True
+            self.start_edible_mode = self.time_left
         for sgum in super_gums_hit:
             sgum.remove_from_sprite_lists()
             self.score += self.score_per_super_gum

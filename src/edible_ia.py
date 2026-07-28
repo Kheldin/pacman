@@ -1,4 +1,4 @@
-def best_dir_for_run_away(pacman_x: int, pacman_y: int, ghost_x: int, ghost_y: int, maze_data):
+def best_dir_to_run_away(pacman_x: int, pacman_y: int, ghost_x: int, ghost_y: int, maze_data):
     total_rows = len(maze_data)
     maze_array_row = (total_rows - 1) - ghost_y
 

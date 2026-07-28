@@ -30,17 +30,14 @@ class InstructionView(arcade.View):
         self.window.show_view(menu_view)
 
     def on_show_view(self) -> None:
-        from src.pacman import WINDOW_HEIGHT, WINDOW_WIDTH
-        
         self.uimanager.enable()
         self.window.background_color = arcade.color.DARK_BLUE
         
         self.text_objects.clear()
-
         title_text = arcade.Text(
             "HOW TO PLAY", 
-            WINDOW_WIDTH / 2, 
-            WINDOW_HEIGHT - 70,
+            self.window.width / 2, 
+            self.window.height - 70,
             arcade.color.YELLOW, 
             font_size=28, 
             anchor_x="center",
@@ -50,8 +47,8 @@ class InstructionView(arcade.View):
 
         rules_title = arcade.Text(
             "RULES:", 
-            WINDOW_WIDTH / 2, 
-            WINDOW_HEIGHT - 150,
+            self.window.width / 2, 
+            self.window.height - 150,
             arcade.color.LIGHT_BLUE, 
             font_size=22, 
             anchor_x="center",
@@ -65,12 +62,11 @@ class InstructionView(arcade.View):
             "• Eat a Power Pellet to turn ghosts blue",
             "  and eat them for extra points."
         ]
-        
-        start_y = WINDOW_HEIGHT - 190
+        start_y = self.height - 190
         for i, rule in enumerate(rules):
             rule_text = arcade.Text(
                 rule,
-                WINDOW_WIDTH / 2,
+                self.window.width / 2,
                 start_y - (i * 35),
                 arcade.color.WHITE,
                 font_size=18,
@@ -80,7 +76,7 @@ class InstructionView(arcade.View):
 
         controls_title = arcade.Text(
             "CONTROLS:", 
-            WINDOW_WIDTH / 2, 
+            self.window.width / 2, 
             start_y - 170,
             arcade.color.LIGHT_BLUE, 
             font_size=22, 
@@ -91,7 +87,7 @@ class InstructionView(arcade.View):
 
         controls_text = arcade.Text(
             "Use ARROW KEYS to move",
-            WINDOW_WIDTH / 2,
+            self.window.width / 2,
             start_y - 210,
             arcade.color.WHITE,
             font_size=18,
@@ -101,7 +97,7 @@ class InstructionView(arcade.View):
         
         arrows_detail = arcade.Text(
             "( UP, DOWN, LEFT, RIGHT )",
-            WINDOW_WIDTH / 2,
+            self.window.width / 2,
             start_y - 240,
             arcade.color.GRAY,
             font_size=14,
