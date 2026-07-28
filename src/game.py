@@ -205,6 +205,7 @@ class Ghost(GridSprite):
         self.face_sprite = arcade.Sprite(scale=scale)
         self.face_textures = all_faces_textures
         self.face_sprite.texture = self.face_textures[color_index]
+        self.current_direction = None
 
     def sync_faces(self) -> None:
         self.face_sprite.center_x = self.center_x
@@ -408,11 +409,11 @@ class GameView(arcade.View):
                                            45, arcade.color.WHITE, 16, anchor_x="center", font_name=retro_font)
 
         self.lives_text = arcade.Text(
-            f"VIES: {self.lives}", 20, 15, arcade.color.YELLOW, 16, font_name=retro_font)
+            f"LIVES: {self.lives}", 20, 15, arcade.color.YELLOW, 16, font_name=retro_font)
         self.level_text = arcade.Text(f"NIV: {self.level}", self.window.width -
                                       20, 15, arcade.color.YELLOW, 16, anchor_x="right", font_name=retro_font)
 
-        # Ajout des textes manquants pour éviter le crash
+
         self.time_text = arcade.Text(f"TIME: {int(self.time_left)}", self.window.width -
                                      150, self.window.height - 45, arcade.color.WHITE, 16, font_name=retro_font)
         self.fps_text = arcade.Text(
@@ -435,7 +436,7 @@ class GameView(arcade.View):
             self.player_list.draw()
 
         with self.gui_camera.activate():
-            # Tout le texte doit être ici sous la caméra GUI
+
             self.up1_text.draw()
             self.score_text.draw()
             self.high_score_header.draw()
@@ -477,6 +478,7 @@ class GameView(arcade.View):
             exit()
 
     def on_update(self, delta_time):
+
         if self.ghosts_edible and self.start_edible_mode - self.time_left >= 10:
             self.ghosts_edible = False
         if self.game_over:
@@ -532,7 +534,7 @@ class GameView(arcade.View):
 
             if self.ghosts_edible:
                 best_dir = best_dir_to_run_away(
-                    target_col, target_row, ghost_col, ghost_row, self.maze_data)
+                    target_col, target_row, ghost_col, ghost_row, self.maze_data, current_dir=ghost.current_direction)
             else:
                 best_dir = bfs_shortest_path_direction(
                     ghost_col, ghost_row, target_col, target_row, self.maze_data
@@ -540,7 +542,7 @@ class GameView(arcade.View):
             if best_dir is not None:
                 ghost.next_direction = best_dir
             else:
-                ghost.next_direction = random.choice(DIR_DOWN, DIR_LEFT, DIR_RIGHT, DIR_DOWN)
+                ghost.next_direction = random.choice([DIR_DOWN, DIR_LEFT, DIR_RIGHT, DIR_DOWN])
 
             ghost.try_turning(self.maze_data)
 
@@ -606,7 +608,7 @@ class GameView(arcade.View):
 
         self.score_text.text = str(self.score)
         self.time_text.text = f"TIME: {int(self.time_left)}"
-        self.lives_text.text = f"VIES: {self.lives}"
+        self.lives_text.text = f"LIVES: {self.lives}"
 
         self.player_sprite.update_animation(delta_time)
 

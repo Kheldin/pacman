@@ -1,4 +1,6 @@
-def best_dir_to_run_away(pacman_x: int, pacman_y: int, ghost_x: int, ghost_y: int, maze_data):
+
+def best_dir_to_run_away(pacman_x: int, pacman_y: int, ghost_x: int, ghost_y: int, maze_data, current_dir: int):
+
     total_rows = len(maze_data)
     maze_array_row = (total_rows - 1) - ghost_y
 
@@ -8,16 +10,16 @@ def best_dir_to_run_away(pacman_x: int, pacman_y: int, ghost_x: int, ghost_y: in
     current_cell = maze_data[maze_array_row][ghost_x]
     possible_moves = []
 
-    if current_cell in [0, 2, 4, 6, 8, 10, 12, 14]: # north
+    if current_cell in [0, 2, 4, 6, 8, 10, 12, 14] and current_dir != 3: # north
         possible_moves.append((ghost_x, ghost_y + 1, 2))
 
-    if current_cell in [0, 1, 4, 5, 8, 9, 12, 13]: # east
+    if current_cell in [0, 1, 4, 5, 8, 9, 12, 13] and current_dir != 1: # east
         possible_moves.append((ghost_x + 1, ghost_y, 0))
 
-    if current_cell in [0, 1, 2, 3, 8, 9, 10, 11]: # south
+    if current_cell in [0, 1, 2, 3, 8, 9, 10, 11] and current_dir != 2: # south
         possible_moves.append((ghost_x, ghost_y - 1, 3))
 
-    if current_cell in [0, 1, 2, 3, 4, 5, 6, 7]: # west
+    if current_cell in [0, 1, 2, 3, 4, 5, 6, 7] and current_dir != 0: # west
         possible_moves.append((ghost_x - 1, ghost_y, 1))
 
     if not possible_moves:
@@ -32,5 +34,5 @@ def best_dir_to_run_away(pacman_x: int, pacman_y: int, ghost_x: int, ghost_y: in
         if distance > max_distance:
             max_distance = distance
             best_dir = direction
-
+    
     return best_dir
