@@ -290,6 +290,7 @@ class GameView(arcade.View):
 
         self.ghosts_edible: bool = False
         self.start_edible_mode = None
+        self.pause = False
 
         self.score = 0
         self.lives = 3
@@ -473,6 +474,8 @@ class GameView(arcade.View):
                 ).draw()
 
             cheat_text = "ON" if self.cheat_mode else "OFF"
+            pause_text = "ON" if self.pause else "OFF"
+
             arcade.Text(
                 f"CHEAT MODE: {cheat_text} (Press C)",
                 self.window.width - 150,
@@ -481,6 +484,26 @@ class GameView(arcade.View):
                 font_size=10,
                 anchor_x="center"
             ).draw()
+
+            arcade.Text(
+                f"PAUSE MODE: {pause_text} (Press SPACE)",
+                self.window.width - 140,
+                self.window.height - 180,
+                arcade.color.YELLOW,
+                font_size=10,
+                anchor_x="center"
+            ).draw()
+
+            if self.pause:
+                arcade.Text(
+                    "PAUSE",
+                    self.window.width / 2,
+                    self.window.height / 2,
+                    arcade.color.YELLOW,
+                    font_size=90,
+                    anchor_x="center",
+                    font_name="Pacmania"
+                ).draw()
 
     def on_key_press(self, key, modifiers):
         if self.game_over:
@@ -506,12 +529,14 @@ class GameView(arcade.View):
             else:
                 self.cheat_mode = True
                 self.player_sprite.cheat_mode_activation()
+        elif key == arcade.key.SPACE:
+            self.pause = not self.pause
 
     def on_update(self, delta_time):
 
         if self.ghosts_edible and self.start_edible_mode - self.time_left >= 10:
             self.ghosts_edible = False
-        if self.game_over:
+        if self.game_over or self.pause:
             return
 
         self.time_left -= delta_time
@@ -575,7 +600,7 @@ class GameView(arcade.View):
                             )
                         else:
                             best_dir = random_dir(ghost_x=ghost_col, ghost_y=ghost_row,
-                                                maze_data=self.maze_data, current_dir=ghost.current_direction)
+                                                  maze_data=self.maze_data, current_dir=ghost.current_direction)
                     if best_dir is not None:
                         ghost.next_direction = best_dir
 
