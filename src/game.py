@@ -472,6 +472,16 @@ class GameView(arcade.View):
                     font_name="Pacmania"
                 ).draw()
 
+            cheat_text = "ON" if self.cheat_mode else "OFF"
+            arcade.Text(
+                f"CHEAT MODE: {cheat_text} (Press C)",
+                self.window.width - 150,
+                self.window.height - 150,
+                arcade.color.YELLOW,
+                font_size=10,
+                anchor_x="center"
+            ).draw()
+
     def on_key_press(self, key, modifiers):
         if self.game_over:
             from src.menu_view import MenuView
@@ -536,90 +546,90 @@ class GameView(arcade.View):
                  (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE
             )
         )
-
-        for i, ghost in enumerate(self.ghosts_list):
-            if ghost.respawn_time is not None:
-                if self.time_left <= ghost.respawn_time:
-                    ghost.respawn_time = None
-                    ghost.center_x, ghost.center_y = ghost.start_position
-                    ghost.sync_faces()
-                else:
-                    continue
-            ghost_col = int(
-                round((ghost.center_x - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE)
-            )
-            ghost_row = int(
-                round((ghost.center_y - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE)
-            )
-
-            current_cell = (ghost_col, ghost_row)
-
-            if ghost.last_cell != current_cell:
-                if self.ghosts_edible:
-                    best_dir = best_dir_to_run_away(
-                        target_col, target_row, ghost_col, ghost_row, self.maze_data, current_dir=ghost.current_direction)
-                else:
-                    if ghost.mode == "chase":
-                        best_dir = bfs_shortest_path_direction(
-                            ghost_col, ghost_row, target_col, target_row, self.maze_data
-                        )
-                    else:
-                        best_dir = random_dir(ghost_x=ghost_col, ghost_y=ghost_row,
-                                              maze_data=self.maze_data, current_dir=ghost.current_direction)
-                if best_dir is not None:
-                    ghost.next_direction = best_dir
-
-                ghost.last_cell = current_cell
-
-            ghost.try_turning(self.maze_data)
-
-            ghost.change_x = 0
-            ghost.change_y = 0
-            if self.ghosts_edible:
-                ghost.texture = ghost.edible_texture
-            else:
-                ghost.texture = ghost.base_texture
-            if ghost.current_direction == DIR_UP:
-                ghost.change_y = GHOST_SPEED
-            elif ghost.current_direction == DIR_DOWN:
-                ghost.change_y = -GHOST_SPEED
-            elif ghost.current_direction == DIR_LEFT:
-                ghost.change_x = -GHOST_SPEED
-            elif ghost.current_direction == DIR_RIGHT:
-                ghost.change_x = GHOST_SPEED
-
-            # ghost.current_direction = ghost.next_direction
-            self.ghost_physics_engines[i].update()
-            ghost.sync_faces()
-        ghosts_hit = arcade.check_for_collision_with_list(
-            self.player_sprite, self.ghosts_list)
-        if ghosts_hit:
-            if self.ghosts_edible:
-                for ghost in ghosts_hit:
-                    ghost.respawn_time = self.time_left - 10
-                    ghost.center_x = -1000
-                    ghost.center_y = -1000
-                    ghost.sync_faces()
-                    self.score += 200
-            else:
-                if not self.cheat_mode:
-                    self.lives -= 1
-                if self.lives <= 0:
-                    self.lives = 0
-                    self.game_over = True
-                else:
-                    self.player_sprite.center_x, self.player_sprite.center_y = (
-                        self.player_start_pos
-                    )
-                    self.player_sprite.current_direction = None
-                    self.player_sprite.next_direction = None
-
-                    for i, ghost in enumerate(self.ghosts_list):
-                        ghost.center_x, ghost.center_y = ghost.start_position
-                        ghost.current_direction = None
-                        ghost.next_direction = None
+        if not self.cheat_mode:
+            for i, ghost in enumerate(self.ghosts_list):
+                if ghost.respawn_time is not None:
+                    if self.time_left <= ghost.respawn_time:
                         ghost.respawn_time = None
+                        ghost.center_x, ghost.center_y = ghost.start_position
                         ghost.sync_faces()
+                    else:
+                        continue
+                ghost_col = int(
+                    round((ghost.center_x - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE)
+                )
+                ghost_row = int(
+                    round((ghost.center_y - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE)
+                )
+
+                current_cell = (ghost_col, ghost_row)
+
+                if ghost.last_cell != current_cell:
+                    if self.ghosts_edible:
+                        best_dir = best_dir_to_run_away(
+                            target_col, target_row, ghost_col, ghost_row, self.maze_data, current_dir=ghost.current_direction)
+                    else:
+                        if ghost.mode == "chase":
+                            best_dir = bfs_shortest_path_direction(
+                                ghost_col, ghost_row, target_col, target_row, self.maze_data
+                            )
+                        else:
+                            best_dir = random_dir(ghost_x=ghost_col, ghost_y=ghost_row,
+                                                maze_data=self.maze_data, current_dir=ghost.current_direction)
+                    if best_dir is not None:
+                        ghost.next_direction = best_dir
+
+                    ghost.last_cell = current_cell
+
+                ghost.try_turning(self.maze_data)
+
+                ghost.change_x = 0
+                ghost.change_y = 0
+                if self.ghosts_edible:
+                    ghost.texture = ghost.edible_texture
+                else:
+                    ghost.texture = ghost.base_texture
+                if ghost.current_direction == DIR_UP:
+                    ghost.change_y = GHOST_SPEED
+                elif ghost.current_direction == DIR_DOWN:
+                    ghost.change_y = -GHOST_SPEED
+                elif ghost.current_direction == DIR_LEFT:
+                    ghost.change_x = -GHOST_SPEED
+                elif ghost.current_direction == DIR_RIGHT:
+                    ghost.change_x = GHOST_SPEED
+
+                # ghost.current_direction = ghost.next_direction
+                self.ghost_physics_engines[i].update()
+                ghost.sync_faces()
+            ghosts_hit = arcade.check_for_collision_with_list(
+                self.player_sprite, self.ghosts_list)
+            if ghosts_hit:
+                if self.ghosts_edible:
+                    for ghost in ghosts_hit:
+                        ghost.respawn_time = self.time_left - 10
+                        ghost.center_x = -1000
+                        ghost.center_y = -1000
+                        ghost.sync_faces()
+                        self.score += 200
+                else:
+                    if not self.cheat_mode:
+                        self.lives -= 1
+                    if self.lives <= 0:
+                        self.lives = 0
+                        self.game_over = True
+                    else:
+                        self.player_sprite.center_x, self.player_sprite.center_y = (
+                            self.player_start_pos
+                        )
+                        self.player_sprite.current_direction = None
+                        self.player_sprite.next_direction = None
+
+                        for i, ghost in enumerate(self.ghosts_list):
+                            ghost.center_x, ghost.center_y = ghost.start_position
+                            ghost.current_direction = None
+                            ghost.next_direction = None
+                            ghost.respawn_time = None
+                            ghost.sync_faces()
         if self.cheat_mode:
             aura_radius = GRID_PIXEL_SIZE * 3
 
