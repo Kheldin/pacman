@@ -3,7 +3,8 @@ import random
 import math
 from collections import deque
 from src.maze_sprites import create_maze_sprites
-from src.edible_ia import best_dir_to_run_away
+from src.edible_ai import best_dir_to_run_away
+from src.random_ai import random_dir
 
 TILE_SOURCE_SIZE = 16
 PLAYER_SOURCE_SIZE = 32
@@ -193,6 +194,8 @@ class Ghost(GridSprite):
         super().__init__(scale=scale)
 
         self.start_position = start_position
+        self.mode = "chase" if color_index % 2 else "random"
+        self.last_cell = None
 
         start = color_index * 4
         self.respawn_time = None
@@ -413,7 +416,6 @@ class GameView(arcade.View):
         self.level_text = arcade.Text(f"NIV: {self.level}", self.window.width -
                                       20, 15, arcade.color.YELLOW, 16, anchor_x="right", font_name=retro_font)
 
-
         self.time_text = arcade.Text(f"TIME: {int(self.time_left)}", self.window.width -
                                      150, self.window.height - 45, arcade.color.WHITE, 16, font_name=retro_font)
         self.fps_text = arcade.Text(
@@ -532,17 +534,24 @@ class GameView(arcade.View):
                 round((ghost.center_y - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE)
             )
 
-            if self.ghosts_edible:
-                best_dir = best_dir_to_run_away(
-                    target_col, target_row, ghost_col, ghost_row, self.maze_data, current_dir=ghost.current_direction)
-            else:
-                best_dir = bfs_shortest_path_direction(
-                    ghost_col, ghost_row, target_col, target_row, self.maze_data
-                )
-            if best_dir is not None:
-                ghost.next_direction = best_dir
-            else:
-                ghost.next_direction = random.choice([DIR_DOWN, DIR_LEFT, DIR_RIGHT, DIR_DOWN])
+            current_cell = (ghost_col, ghost_row)
+
+            if ghost.last_cell != current_cell:
+                if self.ghosts_edible:
+                    best_dir = best_dir_to_run_away(
+                        target_col, target_row, ghost_col, ghost_row, self.maze_data, current_dir=ghost.current_direction)
+                else:
+                    if ghost.mode == "chase":
+                        best_dir = bfs_shortest_path_direction(
+                            ghost_col, ghost_row, target_col, target_row, self.maze_data
+                        )
+                    else:
+                        best_dir = random_dir(ghost_x=ghost_col, ghost_y=ghost_row,
+                                            maze_data=self.maze_data, current_dir=ghost.current_direction)
+                if best_dir is not None:
+                    ghost.next_direction = best_dir
+                
+                ghost.last_cell = current_cell
 
             ghost.try_turning(self.maze_data)
 
@@ -561,6 +570,7 @@ class GameView(arcade.View):
             elif ghost.current_direction == DIR_RIGHT:
                 ghost.change_x = GHOST_SPEED
 
+            # ghost.current_direction = ghost.next_direction
             self.ghost_physics_engines[i].update()
             ghost.sync_faces()
         ghosts_hit = arcade.check_for_collision_with_list(
@@ -588,7 +598,10 @@ class GameView(arcade.View):
                         ghost.center_x, ghost.center_y = ghost.start_position
                         ghost.current_direction = None
                         ghost.next_direction = None
+                        ghost.respawn_time = None
                         ghost.sync_faces()
+                        self.score += 200
+
         gums_hit = arcade.check_for_collision_with_list(
             self.player_sprite, self.pacgum_list
         )
