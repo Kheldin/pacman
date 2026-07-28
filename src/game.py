@@ -193,6 +193,7 @@ class Ghost(GridSprite):
         self.start_position = start_position
 
         start = color_index * 4
+        self.respawn_time = None
         self.base_textures = all_body_textures[start: start + 4]
         self.base_texture = self.base_textures[0]
         self.enible_textures = all_body_textures[35: 36]
@@ -266,12 +267,13 @@ class GameView(arcade.View):
         self.score_text = None
         self.lives_text = None
         self.ghosts_list = None
+        self.ghosts_save_list = None
         self.faces_list = None
         self.pacgum_list = None
         self.super_pacgum_list = None
 
         self.ghosts_enible: bool = False
-        self.time_save = None
+        self.start_enible_mode = None
 
         self.score = 0
         self.lives = 3
@@ -314,6 +316,7 @@ class GameView(arcade.View):
 
         self.player_list = arcade.SpriteList()
         self.ghosts_list = arcade.SpriteList()
+        self.ghosts_save_list = arcade.SpriteList()
         self.faces_list = arcade.SpriteList()
 
         item_base_texture = arcade.load_texture(
@@ -379,6 +382,7 @@ class GameView(arcade.View):
             ghost.center_x, ghost.center_y = pos
             ghost.sync_faces()
             self.ghosts_list.append(ghost)
+            self.ghosts_save_list.append(ghost)
             self.faces_list.append(ghost.face_sprite)
             self.ghost_physics_engines.append(
                 arcade.PhysicsEngineSimple(ghost, self.wall_list)
@@ -471,7 +475,7 @@ class GameView(arcade.View):
             exit()
 
     def on_update(self, delta_time):
-        if self.ghosts_enible and self.time_save - self.time_left >= 10:
+        if self.ghosts_enible and self.start_enible_mode - self.time_left >= 10:
             self.ghosts_enible = False
         if self.game_over:
             return
@@ -510,6 +514,13 @@ class GameView(arcade.View):
         )
 
         for i, ghost in enumerate(self.ghosts_list):
+            if ghost.respawn_time is not None:
+                if self.time_left <= ghost.respawn_time:
+                    ghost.respawn_time = None
+                    ghost.center_x, ghost.center_y = ghost.start_position
+                    ghost.sync_faces()
+                else:
+                    continue
             ghost_col = int(
                 round((ghost.center_x - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE)
             )
@@ -542,24 +553,33 @@ class GameView(arcade.View):
 
             self.ghost_physics_engines[i].update()
             ghost.sync_faces()
-
-        if arcade.check_for_collision_with_list(self.player_sprite, self.ghosts_list):
-            self.lives -= 1
-            if self.lives <= 0:
-                self.lives = 0
-                self.game_over = True
-            else:
-                self.player_sprite.center_x, self.player_sprite.center_y = (
-                    self.player_start_pos
-                )
-                self.player_sprite.current_direction = None
-                self.player_sprite.next_direction = None
-
-                for i, ghost in enumerate(self.ghosts_list):
-                    ghost.center_x, ghost.center_y = ghost.start_position
-                    ghost.current_direction = None
-                    ghost.next_direction = None
+        ghosts_hit = arcade.check_for_collision_with_list(self.player_sprite, self.ghosts_list)
+        if ghosts_hit:
+            print("LENNN ==", len(ghosts_hit))
+        if ghosts_hit:
+            if self.ghosts_enible:
+                for ghost in ghosts_hit:
+                    ghost.respawn_time = self.time_left - 10
+                    ghost.center_x = -1000
+                    ghost.center_y = -1000
                     ghost.sync_faces()
+            else:
+                self.lives -= 1
+                if self.lives <= 0:
+                    self.lives = 0
+                    self.game_over = True
+                else:
+                    self.player_sprite.center_x, self.player_sprite.center_y = (
+                        self.player_start_pos
+                    )
+                    self.player_sprite.current_direction = None
+                    self.player_sprite.next_direction = None
+
+                    for i, ghost in enumerate(self.ghosts_list):
+                        ghost.center_x, ghost.center_y = ghost.start_position
+                        ghost.current_direction = None
+                        ghost.next_direction = None
+                        ghost.sync_faces()
         gums_hit = arcade.check_for_collision_with_list(
             self.player_sprite, self.pacgum_list
         )
@@ -572,7 +592,7 @@ class GameView(arcade.View):
         )
         if super_gums_hit:
             self.ghosts_enible = True
-            self.time_save = self.time_left
+            self.start_enible_mode = self.time_left
         for sgum in super_gums_hit:
             sgum.remove_from_sprite_lists()
             self.score += self.score_per_super_gum
