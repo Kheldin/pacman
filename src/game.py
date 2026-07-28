@@ -19,7 +19,6 @@ WALL_THICKNESS = 2
 WALL_COLOR = arcade.color.BLUE_SAPPHIRE
 
 CAMERA_PAN_SPEED = 0.15
-MOVEMENT_SPEED = 5
 GHOST_SPEED = 2.0
 
 DIR_RIGHT = 0
@@ -233,7 +232,18 @@ class Pacman(GridSprite):
         self.texture = self.moving_right[0]
         self.current_texture_index = 0
         self.time_since_last_frame = 0.0
-        self.animation_speed = 0.05
+        self.normal_animation_speed = 0.05
+        self.animation_speed = self.normal_animation_speed
+        self.normal_speed = 5
+        self.speed = self.normal_speed
+
+    def reset_normal(self):
+        self.animation_speed = self.normal_animation_speed
+        self.speed = self.normal_speed
+
+    def cheat_mode_activation(self):
+        self.animation_speed = 0.01
+        self.speed = 10
 
     def update_animation(self, delta_time: float = 1 / 60):
         is_moving = self.change_x != 0 or self.change_y != 0
@@ -315,6 +325,7 @@ class GameView(arcade.View):
             return default
 
         self.score = 0
+        self.cheat_mode = False
         self.lives = get_conf("lives", 3)
         self.time_left = get_conf("time", 60.0)
         self.score_per_gum = get_conf("points_per_pacgum", 10)
@@ -478,6 +489,13 @@ class GameView(arcade.View):
             self.player_sprite.next_direction = DIR_RIGHT
         elif key == arcade.key.ESCAPE:
             exit()
+        elif key == arcade.key.C:
+            if self.cheat_mode:
+                self.cheat_mode = False
+                self.player_sprite.reset_normal()
+            else:
+                self.cheat_mode = True
+                self.player_sprite.cheat_mode_activation()
 
     def on_update(self, delta_time):
 
@@ -496,13 +514,13 @@ class GameView(arcade.View):
         self.player_sprite.change_y = 0
 
         if self.player_sprite.current_direction == DIR_UP:
-            self.player_sprite.change_y = MOVEMENT_SPEED
+            self.player_sprite.change_y = self.player_sprite.speed
         elif self.player_sprite.current_direction == DIR_DOWN:
-            self.player_sprite.change_y = -MOVEMENT_SPEED
+            self.player_sprite.change_y = -self.player_sprite.speed
         elif self.player_sprite.current_direction == DIR_LEFT:
-            self.player_sprite.change_x = -MOVEMENT_SPEED
+            self.player_sprite.change_x = -self.player_sprite.speed
         elif self.player_sprite.current_direction == DIR_RIGHT:
-            self.player_sprite.change_x = MOVEMENT_SPEED
+            self.player_sprite.change_x = self.player_sprite.speed
 
         self.physics_engine.update()
 
@@ -547,10 +565,10 @@ class GameView(arcade.View):
                         )
                     else:
                         best_dir = random_dir(ghost_x=ghost_col, ghost_y=ghost_row,
-                                            maze_data=self.maze_data, current_dir=ghost.current_direction)
+                                              maze_data=self.maze_data, current_dir=ghost.current_direction)
                 if best_dir is not None:
                     ghost.next_direction = best_dir
-                
+
                 ghost.last_cell = current_cell
 
             ghost.try_turning(self.maze_data)
@@ -582,8 +600,10 @@ class GameView(arcade.View):
                     ghost.center_x = -1000
                     ghost.center_y = -1000
                     ghost.sync_faces()
+                    self.score += 200
             else:
-                self.lives -= 1
+                if not self.cheat_mode:
+                    self.lives -= 1
                 if self.lives <= 0:
                     self.lives = 0
                     self.game_over = True
@@ -600,18 +620,23 @@ class GameView(arcade.View):
                         ghost.next_direction = None
                         ghost.respawn_time = None
                         ghost.sync_faces()
-                        self.score += 200
+        if self.cheat_mode:
+            aura_radius = GRID_PIXEL_SIZE * 3
 
-        gums_hit = arcade.check_for_collision_with_list(
-            self.player_sprite, self.pacgum_list
-        )
+            gums_hit = [gum for gum in self.pacgum_list if math.hypot(
+                self.player_sprite.center_x - gum.center_x, self.player_sprite.center_y - gum.center_y) < aura_radius]
+            super_gums_hit = [sgum for sgum in self.super_pacgum_list if math.hypot(
+                self.player_sprite.center_x - sgum.center_x, self.player_sprite.center_y - sgum.center_y) < aura_radius]
+        else:
+            gums_hit = arcade.check_for_collision_with_list(
+                self.player_sprite, self.pacgum_list)
+            super_gums_hit = arcade.check_for_collision_with_list(
+                self.player_sprite, self.super_pacgum_list
+            )
         for gum in gums_hit:
             gum.remove_from_sprite_lists()
             self.score += self.score_per_gum
 
-        super_gums_hit = arcade.check_for_collision_with_list(
-            self.player_sprite, self.super_pacgum_list
-        )
         if super_gums_hit:
             self.ghosts_edible = True
             self.start_edible_mode = self.time_left
