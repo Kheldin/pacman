@@ -1,4 +1,6 @@
 import arcade
+import json
+import os
 import random
 import math
 from collections import deque
@@ -304,6 +306,8 @@ class GameView(arcade.View):
         self.physics_engine = None
         self.ghost_physics_engines = []
         self.game_over = False
+        self.win = False
+        self.player_name = ""
 
         self.fps_text = None
         self.score_text = None
@@ -312,7 +316,6 @@ class GameView(arcade.View):
         self.level_text = None
 
         self.level = 1
-        self.max_level = 2
 
     def setup(self, maze_data, config):
         self.maze_data = maze_data
@@ -505,7 +508,58 @@ class GameView(arcade.View):
                     font_name="Pacmania"
                 ).draw()
 
+            arcade.Text(
+                f"LEVEL: {self.level}",
+                self.window.width / 2,
+                self.window.height / 1.2,
+                arcade.color.YELLOW,
+                font_size=20,
+                anchor_x="center",
+                font_name="Pacmania"
+            ).draw()
+
+            if self.win:
+                arcade.Text("YOU WIN!", self.window.width / 2, self.window.height / 2 + 50,
+                            arcade.color.GREEN, font_size=60, anchor_x="center", font_name="Pacmania").draw()
+
+                arcade.Text(f"NAME: {self.player_name}_", self.window.width / 2, self.window.height / 2 - 20,
+                            arcade.color.WHITE, font_size=30, anchor_x="center", font_name="Pacmania").draw()
+
+                arcade.Text("PRESS ENTER TO SAVE", self.window.width / 2, self.window.height / 2 - 70,
+                            arcade.color.WHITE, font_size=15, anchor_x="center", font_name="Pacmania").draw()
+
     def on_key_press(self, key, modifiers):
+        if self.win:
+            if key == arcade.key.ENTER and len(self.player_name) > 0:
+                score_file = "scores.json"
+                scores_data = {}
+
+                if os.path.exists(score_file):
+                    try:
+                        with open(score_file, "r") as file:
+                            scores_data = json.load(file)
+                    except json.JSONDecodeError:
+                        pass
+
+                if self.player_name in scores_data:
+                    scores_data[self.player_name].append(self.score)
+                else:
+                    scores_data[self.player_name] = [self.score]
+
+                with open(score_file, "w") as file:
+                    json.dump(scores_data, file, indent=4)
+
+                from src.menu_view import MenuView
+                menu = MenuView(self.config)
+                self.window.show_view(menu)
+
+            elif key == arcade.key.BACKSPACE:
+                self.player_name = self.player_name[:-1]
+            elif arcade.key.A <= key <= arcade.key.Z:
+                if len(self.player_name) < 10:
+                    self.player_name += chr(key).upper()
+            return
+
         if self.game_over:
             from src.menu_view import MenuView
             menu = MenuView(self.config)
@@ -532,13 +586,74 @@ class GameView(arcade.View):
         elif key == arcade.key.SPACE:
             self.pause = not self.pause
 
+        elif key == arcade.key.S and self.cheat_mode:
+            self.load_next_level()
+            self.level += 1
+
+    def load_next_level(self):
+        self.wall_list.clear()
+        self.pacgum_list.clear()
+        self.super_pacgum_list.clear()
+
+        item_base_texture = arcade.load_texture(
+            "src/assets/PacManAssets-Items.png")
+        pacgum_texture = item_base_texture.crop(
+            0, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE)
+        super_pacgum_texture = item_base_texture.crop(
+            ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE)
+
+        self.wall_list, self.pacgum_list, self.super_pacgum_list = create_maze_sprites(
+            self.maze_data, pacgum_texture, super_pacgum_texture
+        )
+
+        self.physics_engine = arcade.PhysicsEngineSimple(
+            self.player_sprite, self.wall_list)
+
+        self.ghost_physics_engines = []
+        for ghost in self.ghosts_list:
+            self.ghost_physics_engines.append(
+                arcade.PhysicsEngineSimple(ghost, self.wall_list))
+
+        self.player_sprite.center_x, self.player_sprite.center_y = self.player_start_pos
+        self.player_sprite.current_direction = None
+        self.player_sprite.next_direction = None
+
+        for ghost in self.ghosts_list:
+            ghost.center_x, ghost.center_y = ghost.start_position
+            ghost.current_direction = None
+            ghost.next_direction = None
+            ghost.respawn_time = None
+            ghost.last_cell = None
+            ghost.sync_faces()
+
+        def get_conf(key, default):
+            if hasattr(self.config, key):
+                return getattr(self.config, key)
+            if isinstance(self.config, dict) and key in self.config:
+                return self.config[key]
+            return default
+
+        self.time_left = get_conf("time", 60.0)
+
+        def get_conf(key, default):
+            if hasattr(self.config, key):
+                return getattr(self.config, key)
+            if isinstance(self.config, dict) and key in self.config:
+                return self.config[key]
+            return default
+
+        self.time_left = get_conf("time", 60.0)
+
     def on_update(self, delta_time):
+
+        if self.level > 10:
+            self.win = True
+
+        if self.game_over or self.pause or self.win:
+            return
 
         if self.ghosts_edible and self.start_edible_mode - self.time_left >= 10:
             self.ghosts_edible = False
-        if self.game_over or self.pause:
-            return
-
         self.time_left -= delta_time
         if self.time_left <= 0:
             self.time_left = 0
@@ -678,6 +793,11 @@ class GameView(arcade.View):
         for sgum in super_gums_hit:
             sgum.remove_from_sprite_lists()
             self.score += self.score_per_super_gum
+
+        if len(self.pacgum_list) == 0 and len(self.super_pacgum_list) == 0:
+            self.level += 1
+            self.load_next_level()
+            return
 
         self.score_text.text = str(self.score)
         self.time_text.text = f"TIME: {int(self.time_left)}"
