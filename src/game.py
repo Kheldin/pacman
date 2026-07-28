@@ -448,7 +448,7 @@ class GameView(arcade.View):
             self.level_text.draw()
 
             if self.game_over:
-                arcade.draw_text(
+                arcade.Text(
                     "GAME OVER",
                     self.window.width / 2,
                     self.window.height / 2,
@@ -456,7 +456,7 @@ class GameView(arcade.View):
                     font_size=70,
                     anchor_x="center",
                     font_name="Pacmania"
-                )
+                ).draw()
 
     def on_key_press(self, key, modifiers):
         if self.game_over:

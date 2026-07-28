@@ -154,7 +154,7 @@ class MenuView(arcade.View):
         self.pacgum_list.draw()
         self.pacman_list.draw()
         
-        arcade.draw_text(
+        arcade.Text(
             "PACMAN 2026", 
             self.window.width / 2, 
             self.window.height - 150,
@@ -162,5 +162,5 @@ class MenuView(arcade.View):
             font_size=40, 
             anchor_x="center",
             font_name="Pacmania"
-        )
+        ).draw()
         self.uimanager.draw()
