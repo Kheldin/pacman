@@ -1,7 +1,9 @@
 import arcade
+import random
 import math
 from collections import deque
 from src.maze_sprites import create_maze_sprites
+from src.enible_ia import best_dir_for_run_away
 
 TILE_SOURCE_SIZE = 16
 PLAYER_SOURCE_SIZE = 32
@@ -447,11 +449,11 @@ class GameView(arcade.View):
 
             if self.game_over:
                 arcade.draw_text(
-                    "GAME OVER", 
-                    self.window.width / 2, 
+                    "GAME OVER",
+                    self.window.width / 2,
                     self.window.height / 2,
-                    arcade.color.YELLOW, 
-                    font_size=70, 
+                    arcade.color.YELLOW,
+                    font_size=70,
                     anchor_x="center",
                     font_name="Pacmania"
                 )
@@ -528,11 +530,17 @@ class GameView(arcade.View):
                 round((ghost.center_y - (GRID_PIXEL_SIZE / 2)) / GRID_PIXEL_SIZE)
             )
 
-            best_dir = bfs_shortest_path_direction(
-                ghost_col, ghost_row, target_col, target_row, self.maze_data
-            )
+            if self.ghosts_enible:
+                best_dir = best_dir_for_run_away(
+                    target_col, target_row, ghost_col, ghost_row, self.maze_data)
+            else:
+                best_dir = bfs_shortest_path_direction(
+                    ghost_col, ghost_row, target_col, target_row, self.maze_data
+                )
             if best_dir is not None:
                 ghost.next_direction = best_dir
+            else:
+                ghost.next_direction = random.choice(DIR_DOWN, DIR_LEFT, DIR_RIGHT, DIR_DOWN)
 
             ghost.try_turning(self.maze_data)
 
@@ -553,7 +561,8 @@ class GameView(arcade.View):
 
             self.ghost_physics_engines[i].update()
             ghost.sync_faces()
-        ghosts_hit = arcade.check_for_collision_with_list(self.player_sprite, self.ghosts_list)
+        ghosts_hit = arcade.check_for_collision_with_list(
+            self.player_sprite, self.ghosts_list)
         if ghosts_hit:
             print("LENNN ==", len(ghosts_hit))
         if ghosts_hit:

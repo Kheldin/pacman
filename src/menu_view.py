@@ -97,6 +97,7 @@ class MenuView(arcade.View):
         maze = MazeGenerator((self.config.width, self.config.height))
         maze.generate()
         game = GameView()
+        print(maze.maze)
         game.setup(maze.maze, self.config)
         self.window.show_view(game)
         log_message("Game started", log_type=LogType.INFO)
