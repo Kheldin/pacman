@@ -531,7 +531,7 @@ class GameView(arcade.View):
     def on_key_press(self, key, modifiers):
         if self.win:
             if key == arcade.key.ENTER and len(self.player_name) > 0:
-                score_file = "scores.json"
+                score_file = self.config.highscore_filename
                 scores_data = {}
 
                 if os.path.exists(score_file):
@@ -592,11 +592,11 @@ class GameView(arcade.View):
 
     def load_next_level(self):
         from mazegenerator import MazeGenerator
-        
+
         maze = MazeGenerator((self.config.width, self.config.height))
         maze.generate()
         self.maze_data = maze.maze
-        
+
         self.wall_list.clear()
         self.pacgum_list.clear()
         self.super_pacgum_list.clear()
