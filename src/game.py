@@ -465,17 +465,6 @@ class GameView(arcade.View):
             self.lives_text.draw()
             self.level_text.draw()
 
-            if self.game_over:
-                arcade.Text(
-                    "GAME OVER",
-                    self.window.width / 2,
-                    self.window.height / 2,
-                    arcade.color.YELLOW,
-                    font_size=70,
-                    anchor_x="center",
-                    font_name="Pacmania"
-                ).draw()
-
             cheat_text = "ON" if self.cheat_mode else "OFF"
             pause_text = "ON" if self.pause else "OFF"
 
@@ -518,10 +507,22 @@ class GameView(arcade.View):
                 font_name="Pacmania"
             ).draw()
 
+            if self.game_over:
+                arcade.Text(
+                    "GAME OVER",
+                    self.window.width / 2,
+                    self.window.height / 2 + 50,
+                    arcade.color.YELLOW,
+                    font_size=70,
+                    anchor_x="center",
+                    font_name="Pacmania"
+                ).draw()
+
             if self.win:
                 arcade.Text("YOU WIN!", self.window.width / 2, self.window.height / 2 + 50,
                             arcade.color.GREEN, font_size=60, anchor_x="center", font_name="Pacmania").draw()
 
+            if self.win or self.game_over:
                 arcade.Text(f"NAME: {self.player_name}_", self.window.width / 2, self.window.height / 2 - 20,
                             arcade.color.WHITE, font_size=30, anchor_x="center", font_name="Pacmania").draw()
 
@@ -529,7 +530,7 @@ class GameView(arcade.View):
                             arcade.color.WHITE, font_size=15, anchor_x="center", font_name="Pacmania").draw()
 
     def on_key_press(self, key, modifiers):
-        if self.win:
+        if self.win or self.game_over:
             if key == arcade.key.ENTER and len(self.player_name) > 0:
                 score_file = self.config.highscore_filename
                 scores_data = {}
@@ -560,12 +561,6 @@ class GameView(arcade.View):
                     self.player_name += chr(key).upper()
             return
 
-        if self.game_over:
-            from src.menu_view import MenuView
-            menu = MenuView(self.config)
-            self.window.show_view(menu)
-            return
-
         if key == arcade.key.UP:
             self.player_sprite.next_direction = DIR_UP
         elif key == arcade.key.DOWN:
@@ -585,7 +580,6 @@ class GameView(arcade.View):
                 self.player_sprite.cheat_mode_activation()
         elif key == arcade.key.SPACE:
             self.pause = not self.pause
-
         elif key == arcade.key.S and self.cheat_mode:
             self.load_next_level()
             self.level += 1
@@ -631,15 +625,6 @@ class GameView(arcade.View):
             ghost.respawn_time = None
             ghost.last_cell = None
             ghost.sync_faces()
-
-        def get_conf(key, default):
-            if hasattr(self.config, key):
-                return getattr(self.config, key)
-            if isinstance(self.config, dict) and key in self.config:
-                return self.config[key]
-            return default
-
-        self.time_left = get_conf("time", 60.0)
 
         def get_conf(key, default):
             if hasattr(self.config, key):
