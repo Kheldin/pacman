@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
-
+from src.logger import log_message, LogType
 
 class PacmanConfig(BaseModel):
     highscore_filename: str = Field(default="highscore.json")
@@ -11,7 +11,6 @@ class PacmanConfig(BaseModel):
     points_per_super_pacgum: int = Field(ge=0, default=50)
     points_per_ghost: int = Field(ge=0, default=200)
     level_max_time: int = Field(gt=0, default=90)
-
 
     @field_validator('highscore_filename')
     @classmethod
@@ -58,4 +57,15 @@ class ConfigParser:
             
         content = self._clean_content()
         
-        return model_class.model_validate_json(content)
+        config = model_class.model_validate_json(content)
+        
+        default_fields = set(config.model_fields.keys()) - config.model_fields_set
+        
+        for field in default_fields:
+            fallback_val = getattr(config, field)
+            log_message(
+                f"Config parameter '{field}' missing. Falling back to default: {fallback_val}", 
+                LogType.WARNING
+            )
+            
+        return config
