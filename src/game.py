@@ -495,6 +495,16 @@ class GameView(arcade.View):
                     anchor_x="center",
                     font_name="Pacmania"
                 ).draw()
+                
+                arcade.Text(
+                    "PRESS 'M' FOR MENU",
+                    self.window.width / 2,
+                    self.window.height / 2 - 80,
+                    arcade.color.WHITE,
+                    font_size=20,
+                    anchor_x="center",
+                    font_name="Pacmania"
+                ).draw()
 
             arcade.Text(
                 f"LEVEL: {self.level}",
@@ -579,12 +589,18 @@ class GameView(arcade.View):
                 self.player_sprite.cheat_mode_activation()
         elif key == arcade.key.SPACE:
             self.pause = not self.pause
+        
+        elif key == arcade.key.M and self.pause:
+            from src.menu_view import MenuView
+            menu = MenuView(self.config)
+            self.window.show_view(menu)
+            
         elif key == arcade.key.S and self.cheat_mode:
             self.load_next_level()
             self.level += 1
 
     def load_next_level(self):
-        from mazegenerator import MazeGenerato
+        from mazegenerator import MazeGenerator
 
         maze = MazeGenerator((self.config.width, self.config.height))
         maze.generate()
