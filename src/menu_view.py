@@ -96,8 +96,10 @@ class MenuView(arcade.View):
         """start a game."""
         from src.pacman import WINDOW_WIDTH, WINDOW_HEIGHT
 
-        maze = MazeGenerator((self.config.width, self.config.height))
-        maze.generate()
+
+        maze = MazeGenerator((self.config.width, self.config.height), seed=42)
+        maze.generate(seed=42)
+
         game = GameView()
         game.setup(maze.maze, self.config)
         self.window.show_view(game)

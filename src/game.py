@@ -1,7 +1,6 @@
 import arcade
 import json
 import os
-import random
 import math
 from collections import deque
 from src.maze_sprites import create_maze_sprites
@@ -585,7 +584,7 @@ class GameView(arcade.View):
             self.level += 1
 
     def load_next_level(self):
-        from mazegenerator import MazeGenerator
+        from mazegenerator import MazeGenerato
 
         maze = MazeGenerator((self.config.width, self.config.height))
         maze.generate()
