@@ -1,22 +1,27 @@
 import os
 import json
 import re
+from typing import Any, Dict, List, Tuple
+
 import arcade
 import arcade.gui
 
+
 class HighscoreView(arcade.View):
-    def __init__(self, config):
+    """View responsible for displaying and managing the highscores."""
+
+    def __init__(self, config: Any) -> None:
+        """Initialize the HighscoreView and its UI components."""
         super().__init__()
         self.config = config
-        
-        # Sécurisation de la récupération du chemin du fichier
+
         if isinstance(config, dict):
-            self.path = config.get("highscore_filename", "scores.json")
+            self.path: str = config.get("highscore_filename", "scores.json")
         else:
             self.path = getattr(config, "highscore_filename", "scores.json")
-            
-        self.highscores = {}
-        self.text_objects = []
+
+        self.highscores: Dict[str, List[int]] = {}
+        self.text_objects: List[arcade.Text] = []
 
         self.uimanager = arcade.gui.UIManager()
         self.uimanager.enable()
@@ -35,31 +40,36 @@ class HighscoreView(arcade.View):
         )
         self.uimanager.add(anchor_layout)
 
-    def on_click_back(self, event):
-        """Return to the main menu."""
+    def on_click_back(self, event: Any) -> None:
+        """Return to the main menu when the back button is clicked."""
         from src.menu_view import MenuView
         menu_view = MenuView(self.config)
         self.window.show_view(menu_view)
 
     def _is_valid_name(self, name: str) -> bool:
+        """Check if the provided name is valid (alphanumeric, 1-10 chars)."""
         if not isinstance(name, str) or not (1 <= len(name) <= 10):
             return False
         return bool(re.match(r"^[a-zA-Z0-9 ]+$", name))
 
-    def _read_file(self):
+    def _read_file(self) -> None:
+        """Read highscores from the JSON file and format them."""
         try:
             if os.path.isfile(self.path):
                 with open(self.path, "r") as f:
                     data = json.load(f)
                     if isinstance(data, dict):
-                        valid_scores = {}
+                        valid_scores: Dict[str, List[int]] = {}
                         for name, scores in data.items():
                             if self._is_valid_name(name):
-                                # Gère la rétrocompatibilité si un score est encore un entier
                                 if isinstance(scores, int):
                                     valid_scores[name] = [scores]
                                 elif isinstance(scores, list):
-                                    valid_scores[name] = scores
+                                    # Force casting to integer for Mypy
+                                    valid_scores[name] = [
+                                        int(s) for s in scores
+                                        if isinstance(s, (int, float, str))
+                                    ]
                         self.highscores = valid_scores
                     else:
                         self.highscores = {}
@@ -71,17 +81,18 @@ class HighscoreView(arcade.View):
             self.highscores = {}
             self._reset_file()
 
-    def _reset_file(self):
+    def _reset_file(self) -> None:
+        """Reset the highscore file to an empty JSON object."""
         with open(self.path, "w") as f:
             json.dump({}, f)
 
     def add_highscore(self, name: str, score: int) -> bool:
+        """Add a new highscore for a given player name and save to file."""
         clean_name = name.strip()
 
         if not self._is_valid_name(clean_name):
             return False
 
-        # Ajoute à la liste existante ou crée une nouvelle liste
         if clean_name in self.highscores:
             self.highscores[clean_name].append(score)
         else:
@@ -93,6 +104,7 @@ class HighscoreView(arcade.View):
         return True
 
     def on_show_view(self) -> None:
+        """Prepare and format the view before it is displayed."""
         self.uimanager.enable()
         self.window.background_color = arcade.color.DARK_BLUE
 
@@ -110,14 +122,14 @@ class HighscoreView(arcade.View):
         )
         self.text_objects.append(title_text)
 
-        # Aplatir le dictionnaire en une liste de tuples : (nom, score_unique)
-        all_scores = []
+        all_scores: List[Tuple[str, int]] = []
         for name, scores in self.highscores.items():
             for score in scores:
                 all_scores.append((name, score))
 
-        # Trier tous les scores globalement
-        sorted_scores = sorted(all_scores, key=lambda item: item[1], reverse=True)
+        sorted_scores = sorted(
+            all_scores, key=lambda item: item[1], reverse=True
+        )
 
         start_y = self.window.height - 140
         line_height = 35
@@ -147,9 +159,11 @@ class HighscoreView(arcade.View):
                 self.text_objects.append(entry_text)
 
     def on_hide_view(self) -> None:
+        """Disable the UI manager when the view is hidden."""
         self.uimanager.disable()
 
     def on_draw(self) -> None:
+        """Render the screen objects."""
         self.clear()
 
         for text in self.text_objects:

@@ -1,17 +1,23 @@
 import arcade
 import arcade.gui
+from typing import Any, List
 
 
 class InstructionView(arcade.View):
-    def __init__(self, config):
+    """View displaying the rules and controls of the game."""
+
+    def __init__(self, config: Any) -> None:
+        """Initialize the instructions view and its UI components."""
         super().__init__()
         self.config = config
-        self.text_objects = []
+        self.text_objects: List[arcade.Text] = []
 
         self.uimanager = arcade.gui.UIManager()
         self.uimanager.enable()
 
-        self.back_button = arcade.gui.UIFlatButton(text="MAIN MENU", width=180, height=40)
+        self.back_button = arcade.gui.UIFlatButton(
+            text="MAIN MENU", width=180, height=40
+        )
         self.back_button.on_click = self.on_click_back
 
         anchor_layout = arcade.gui.UIAnchorLayout()
@@ -23,34 +29,35 @@ class InstructionView(arcade.View):
         )
         self.uimanager.add(anchor_layout)
 
-    def on_click_back(self, event):
-        """Return to the main menu."""
+    def on_click_back(self, event: Any) -> None:
+        """Return to the main menu when the back button is clicked."""
         from src.menu_view import MenuView
         menu_view = MenuView(self.config)
         self.window.show_view(menu_view)
 
     def on_show_view(self) -> None:
+        """Prepare and format the view before it is displayed."""
         self.uimanager.enable()
         self.window.background_color = arcade.color.DARK_BLUE
-        
+
         self.text_objects.clear()
         title_text = arcade.Text(
-            "HOW TO PLAY", 
-            self.window.width / 2, 
+            "HOW TO PLAY",
+            self.window.width / 2,
             self.window.height - 70,
-            arcade.color.YELLOW, 
-            font_size=28, 
+            arcade.color.YELLOW,
+            font_size=28,
             anchor_x="center",
             bold=True
         )
         self.text_objects.append(title_text)
 
         rules_title = arcade.Text(
-            "RULES:", 
-            self.window.width / 2, 
+            "RULES:",
+            self.window.width / 2,
             self.window.height - 150,
-            arcade.color.LIGHT_BLUE, 
-            font_size=22, 
+            arcade.color.LIGHT_BLUE,
+            font_size=22,
             anchor_x="center",
             bold=True
         )
@@ -62,7 +69,10 @@ class InstructionView(arcade.View):
             "• Eat a Power Pellet to turn ghosts blue",
             "  and eat them for extra points."
         ]
-        start_y = self.height - 190
+
+        # Fixed: was self.height, which causes an error.
+        start_y = self.window.height - 190
+
         for i, rule in enumerate(rules):
             rule_text = arcade.Text(
                 rule,
@@ -75,11 +85,11 @@ class InstructionView(arcade.View):
             self.text_objects.append(rule_text)
 
         controls_title = arcade.Text(
-            "CONTROLS:", 
-            self.window.width / 2, 
+            "CONTROLS:",
+            self.window.width / 2,
             start_y - 170,
-            arcade.color.LIGHT_BLUE, 
-            font_size=22, 
+            arcade.color.LIGHT_BLUE,
+            font_size=22,
             anchor_x="center",
             bold=True
         )
@@ -94,7 +104,7 @@ class InstructionView(arcade.View):
             anchor_x="center"
         )
         self.text_objects.append(controls_text)
-        
+
         arrows_detail = arcade.Text(
             "( UP, DOWN, LEFT, RIGHT )",
             self.window.width / 2,
@@ -110,8 +120,9 @@ class InstructionView(arcade.View):
         self.uimanager.disable()
 
     def on_draw(self) -> None:
+        """Render the screen objects."""
         self.clear()
-        
+
         for text in self.text_objects:
             text.draw()
 
