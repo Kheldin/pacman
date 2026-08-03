@@ -6,9 +6,9 @@
 
 This project is a Python implementation of the classic Pac-Man arcade game, built as part of the 42 school curriculum. The goal is to recreate the core experience of the original 1980 Namco arcade title: a player-controlled Pac-Man navigates a maze, collects pac-gums and super pac-gums, avoids (or eats) ghosts, and tries to achieve the highest score possible before time or lives run out.
 
-The game is rendered using the **Arcade** library and is structured as a proper Python package under `src/`. Mazes are procedurally generated using the **A-Maze-ing** (`mazegenerator`) package. Configuration is fully externalised to a JSON file, and high scores are persisted across sessions.
+The game is rendered using the **Arcade** library and is structured as a proper Python package under `src/`. Mazes are procedurally generated using the **A-Maze-ing** (`mazegenerator`) package — a third-party library vendored directly in the repository (version 2.1.0) that produces perfect, connected labyrinths from a given grid size. Configuration is fully externalised to a JSON file, and high scores are persisted across sessions.
 
-Key features include:
+Key features:
 
 - Procedurally generated mazes via the `mazegenerator` package
 - Multiple ghosts with individual behaviours
@@ -17,6 +17,7 @@ Key features include:
 - Configurable game parameters (grid size, lives, point values, level timer)
 - Per-level time limit
 - Linting and type-checking toolchain (flake8 + mypy)
+- Standalone executable packaged with PyInstaller and published on itch.io
 
 ## Instructions
 
@@ -78,6 +79,7 @@ The game is configured via a **`config.json`** file at the root of the repositor
   "width": 16,
   "height": 16,
   "lives": 5,
+  "pacgum": 7,
   "points_per_pacgum": 10,
   "points_per_super_pacgum": 50,
   "points_per_ghost": 200,
@@ -91,6 +93,7 @@ The game is configured via a **`config.json`** file at the root of the repositor
 | `width` | int | `16` | Number of columns in the maze grid. |
 | `height` | int | `16` | Number of rows in the maze grid. |
 | `lives` | int | `5` | Number of lives the player starts with. |
+| `pacgum` | int | `7` | Number of super pac-gums placed in the maze per level. |
 | `points_per_pacgum` | int | `10` | Points awarded for collecting a standard pac-gum. |
 | `points_per_super_pacgum` | int | `50` | Points awarded for collecting a super pac-gum. |
 | `points_per_ghost` | int | `200` | Points awarded for eating a frightened ghost. |
@@ -120,7 +123,7 @@ A list-per-player design was chosen over storing only the single best score for 
 
 ## Maze Generation
 
-Mazes are generated using the **A-Maze-ing** package (`mazegenerator`, version 2.1.0), which is vendored directly in the repository under the `mazegenerator/` directory and `mazegenerator-2.1.0.dist-info/`.
+Mazes are generated using the **A-Maze-ing** package (`mazegenerator`, version 2.1.0), which is vendored directly in the repository under the `mazegenerator/` directory and `mazegenerator-2.1.0.dist-info/`. Vendoring was chosen to guarantee reproducibility and avoid any dependency on network availability at runtime — the package is available on [PyPI](https://pypi.org/project/mazegenerator/) but is included locally so the game works out of the box after a single `uv sync`.
 
 ### How it is used
 
@@ -179,7 +182,26 @@ pacman/
 - `Player` and `Ghost` are independent entity classes that receive a reference to `Maze` and update their positions each frame.
 - `HighScore` is read at startup and written when the game ends, decoupled from the game loop.
 
-> **Note:** The exact module names above reflect the logical architecture inferred from the repository structure. Some file names may differ slightly — consult the `src/` directory for the authoritative list.
+## Distribution
+
+In addition to running from source, the game is packaged as a standalone executable using **PyInstaller** and published on **[itch.io](https://itch.io)**, so anyone can play it without installing Python or any dependencies.
+
+The PyInstaller spec (`Pacman-42.spec`) bundles the entry point `src/pacman.py`, the `src/assets/` directory, and `config.json` into a self-contained folder named `Pacman-42`. The resulting build can be run directly by double-clicking the executable — no `uv`, no virtual environment, no setup required.
+
+```
+Pacman-42/          # produced by PyInstaller COLLECT
+├── Pacman-42       # the standalone executable
+├── src/assets/     # bundled game assets (sprites, sounds, …)
+└── config.json     # default configuration, editable by the player
+```
+
+To rebuild the package locally, install PyInstaller (`pip install pyinstaller`) and run:
+
+```bash
+pyinstaller Pacman-42.spec
+```
+
+The output will be placed under `dist/Pacman-42/`.
 
 ## Project Management
 
@@ -209,4 +231,4 @@ Claude (Anthropic) was used as a development aid during this project in the foll
 - **Ghost behaviour research:** Summarising the ghost AI behaviours from the original Pac-Man and how to adapt them to a procedurally generated maze (where fixed target tiles do not apply directly).
 - **README drafting:** This README was initially drafted with AI assistance and then reviewed and adjusted to accurately reflect the project's implementation.
 
-AI was **not** used to generate game logic code directly, all implementation decisions and the source code itself were written by the project authors.
+AI was **not** used to generate game logic code directly; all implementation decisions and the source code itself were written by the project authors.
