@@ -885,7 +885,7 @@ class GameView(arcade.View):
                             ghost.respawn_time = None
                             ghost.sync_faces()
 
-        if cheat_mode_active and self.pacgum_list and self.super_pacgum_list:
+        if cheat_mode_active and self.pacgum_list is not None and self.super_pacgum_list is not None:
             aura_rad = GRID_PIXEL_SIZE * 3
             gums_hit = [
                 gum for gum in self.pacgum_list
