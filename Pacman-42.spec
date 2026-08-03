@@ -5,7 +5,7 @@ a = Analysis(
     ['src/pacman.py'],
     pathex=[],
     binaries=[],
-    datas=[('src/assets', 'src/assets')],
+    datas=[('src/assets', 'src/assets'), ('src', 'src'), ('config.json', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

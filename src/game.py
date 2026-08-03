@@ -1,12 +1,14 @@
 import arcade
 import json
 import os
+import sys
 import math
 from typing import Any, Optional
 from collections import deque
 from src.maze_sprites import create_maze_sprites
 from src.edible_ai import best_dir_to_run_away
 from src.random_ai import random_dir
+from src.resource_path import resource_path
 
 TILE_SOURCE_SIZE = 16
 PLAYER_SOURCE_SIZE = 32
@@ -132,7 +134,6 @@ class GridSprite(arcade.Sprite):
             self.next_direction = None
             return
 
-        # Indique explicitement à Mypy que ces valeurs sont des float
         cx: float = self.center_x  # type: ignore[has-type]
         cy: float = self.center_y  # type: ignore[has-type]
 
@@ -240,7 +241,7 @@ class Pacman(GridSprite):
         super().__init__(scale=scale)
 
         sprite_sheet = arcade.load_spritesheet(
-            "src/assets/PacManAssets-PacMan.png"
+            resource_path("src/assets/PacManAssets-PacMan.png")
         )
         all_textures = sprite_sheet.get_texture_grid(
             size=(32, 32), columns=4, count=11
@@ -364,7 +365,7 @@ class GameView(arcade.View):
         self.faces_list = arcade.SpriteList()
 
         item_base_texture = arcade.load_texture(
-            "src/assets/PacManAssets-Items.png"
+            resource_path("src/assets/PacManAssets-Items.png")
         )
         pacgum_texture = item_base_texture.crop(
             0, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE
@@ -401,13 +402,13 @@ class GameView(arcade.View):
         )
 
         ghosts_bss = arcade.load_spritesheet(
-            "src/assets/PacManAssets-Ghosts_Bodys.png"
+            resource_path("src/assets/PacManAssets-Ghosts_Bodys.png")
         )
         ghosts_body_textures = ghosts_bss.get_texture_grid(
             size=(32, 32), columns=4, count=40
         )
         ghosts_fss = arcade.load_spritesheet(
-            "src/assets/PacManAssets-Ghosts_Faces.png"
+            resource_path("src/assets/PacManAssets-Ghosts_Faces.png")
         )
         ghosts_face_textures = ghosts_fss.get_texture_grid(
             size=(16, 16), columns=8, count=16
@@ -446,7 +447,7 @@ class GameView(arcade.View):
         self.game_camera.position = self.player_sprite.position
 
         retro_font = "Pacmania"
-        arcade.load_font("src/assets/Pacmania.ttf")
+        arcade.load_font(resource_path("src/assets/Pacmania.ttf"))
 
         self.up1_text = arcade.Text(
             "1UP", 40, self.window.height - 25,
@@ -645,7 +646,7 @@ class GameView(arcade.View):
         elif key == arcade.key.RIGHT:
             self.player_sprite.next_direction = DIR_RIGHT
         elif key == arcade.key.ESCAPE:
-            exit()
+            sys.exit()
         elif key == arcade.key.C:
             if getattr(self, 'cheat_mode', False):
                 self.cheat_mode = False
@@ -679,7 +680,7 @@ class GameView(arcade.View):
             self.super_pacgum_list.clear()
 
         item_base_texture = arcade.load_texture(
-            "src/assets/PacManAssets-Items.png"
+            resource_path("src/assets/PacManAssets-Items.png")
         )
         pacgum_texture = item_base_texture.crop(
             0, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE, ITEM_SOURCE_SIZE
@@ -728,7 +729,7 @@ class GameView(arcade.View):
             if hasattr(self.config, key):
                 return getattr(self.config, key)
             if isinstance(self.config, dict) and key in self.config:
-                return self.config[key]
+                return config[key]
             return default
 
         self.time_left = get_conf("time", 60.0)

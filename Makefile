@@ -4,6 +4,12 @@ install:
 	@echo "Installing dependencies with uv..."
 	uv sync
 
+build:
+	uv run pyinstaller Pacman-42.spec
+
+run-build:
+	./dist/Pacman-42/Pacman-42 config.json
+
 run:
 	@uv run python3 -m src.pacman config.json
 
@@ -13,6 +19,7 @@ debug:
 
 clean:
 	@echo "Cleaning temporary files..."
+	rm -rf build && rm -rf dist
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true

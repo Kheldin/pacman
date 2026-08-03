@@ -78,7 +78,6 @@ The game is configured via a **`config.json`** file at the root of the repositor
   "width": 16,
   "height": 16,
   "lives": 5,
-  "pacgum": 7,
   "points_per_pacgum": 10,
   "points_per_super_pacgum": 50,
   "points_per_ghost": 200,
@@ -92,7 +91,6 @@ The game is configured via a **`config.json`** file at the root of the repositor
 | `width` | int | `16` | Number of columns in the maze grid. |
 | `height` | int | `16` | Number of rows in the maze grid. |
 | `lives` | int | `5` | Number of lives the player starts with. |
-| `pacgum` | int | `7` | Number of super pac-gums placed in the maze per level. |
 | `points_per_pacgum` | int | `10` | Points awarded for collecting a standard pac-gum. |
 | `points_per_super_pacgum` | int | `50` | Points awarded for collecting a super pac-gum. |
 | `points_per_ghost` | int | `200` | Points awarded for eating a frightened ghost. |

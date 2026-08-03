@@ -1,10 +1,13 @@
 import arcade
 import arcade.gui
+import os
+import sys
 from typing import Any
 from src.game import GameView
 from src.highscore_view import HighscoreView
 from src.logger import log_message, LogType
 from mazegenerator import MazeGenerator
+from src.resource_path import resource_path
 
 
 class MenuView(arcade.View):
@@ -17,13 +20,13 @@ class MenuView(arcade.View):
         self.uimanager = arcade.gui.UIManager()
         self.uimanager.enable()
 
-        arcade.load_font("src/assets/Pacmania.ttf")
+        arcade.load_font(resource_path("src/assets/Pacmania.ttf"))
 
         self.pacman_list = arcade.SpriteList()
         self.pacgum_list = arcade.SpriteList()
 
         pacman_sheet = arcade.load_spritesheet(
-            "src/assets/PacManAssets-PacMan.png"
+            resource_path("src/assets/PacManAssets-PacMan.png")
         )
         self.pacman_textures = pacman_sheet.get_texture_grid(
             size=(32, 32), columns=4, count=4
@@ -39,7 +42,7 @@ class MenuView(arcade.View):
         self.time_since_last_frame = 0.0
 
         item_base_texture = arcade.load_texture(
-            "src/assets/PacManAssets-Items.png"
+            resource_path("src/assets/PacManAssets-Items.png")
         )
         self.pacgum_texture = item_base_texture.crop(0, 16, 16, 16)
 
@@ -138,7 +141,7 @@ class MenuView(arcade.View):
 
     def on_click_exit(self, event: Any) -> None:
         """Quit the game application."""
-        arcade.exit()
+        sys.exit()
 
     def on_show_view(self) -> None:
         """Prepare the view before it is displayed."""
@@ -168,7 +171,6 @@ class MenuView(arcade.View):
         for gum in gums_hit:
             gum.remove_from_sprite_lists()
 
-        # Reset when Pac-Man reaches the border of the screen
         if self.giant_pacman.left > self.window.width:
             self.giant_pacman.right = -100
             self.spawn_gums()
