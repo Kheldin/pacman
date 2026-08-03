@@ -12,10 +12,9 @@ class PacmanConfig(BaseModel):
     """Pydantic model representing the game's configuration settings."""
 
     highscore_filename: str = Field(default="highscore.json")
-    width: int = Field(gt=0, default=15)
-    height: int = Field(gt=0, default=15)
+    width: int = Field(gt=8, default=15)
+    height: int = Field(gt=8, default=15)
     lives: int = Field(gt=0, default=4)
-    pacgum: int = Field(ge=0, default=10)
     points_per_pacgum: int = Field(ge=0, default=10)
     points_per_super_pacgum: int = Field(ge=0, default=50)
     points_per_ghost: int = Field(ge=0, default=200)
