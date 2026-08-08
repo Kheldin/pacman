@@ -1,6 +1,5 @@
 """Main entry point for the Pac-Man game application."""
 
-import os
 import sys
 import arcade
 

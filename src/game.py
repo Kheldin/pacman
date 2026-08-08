@@ -729,7 +729,7 @@ class GameView(arcade.View):
             if hasattr(self.config, key):
                 return getattr(self.config, key)
             if isinstance(self.config, dict) and key in self.config:
-                return config[key]
+                return self.config[key]
             return default
 
         self.time_left = get_conf("time", 60.0)

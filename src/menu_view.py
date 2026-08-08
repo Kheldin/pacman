@@ -1,6 +1,5 @@
 import arcade
 import arcade.gui
-import os
 import sys
 from typing import Any
 from src.game import GameView
